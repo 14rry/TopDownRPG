@@ -25,6 +25,8 @@ class App:
         self.playerX = 4
         self.playerY = 17
         self.playerHealth = 10
+        self.player_vel_x = 0
+        self.player_vel_y = 0
         
         self.level = levels.levels[1,1]
         
@@ -63,55 +65,106 @@ class App:
             
             
             # player movement logic  
-            hold = 2
-            repeat = 2
             newX = self.playerX
             newY = self.playerY
             
             attackCooldown = 4
+
+            dir_x = 0
+            dir_y = 0
+            if pyxel.btn(pyxel.KEY_RIGHT):
+                dir_x += 1
+                #newX = min(self.playerX+speed,self.levelSize)
+            if pyxel.btn(pyxel.KEY_LEFT):
+                dir_x -= 1
+                #newX = max(self.playerX-speed,-1)
+            if pyxel.btn(pyxel.KEY_UP):
+                dir_y -= 1
+                #newY = max(self.playerY-speed,-1)
+            if pyxel.btn(pyxel.KEY_DOWN):
+                dir_y += 1
+                #newY = min(self.playerY+speed,self.levelSize)
+
+            # account for faster diagonals
+            if (dir_y != 0 and dir_x != 0):
+                dir_y *= .7
+                dir_x *= .7
             
-            if pyxel.btnp(pyxel.KEY_RIGHT,hold,repeat):
-                newX = min(self.playerX+1,self.levelSize)
-            if pyxel.btnp(pyxel.KEY_LEFT,hold,repeat):
-                newX = max(self.playerX-1,-1)
-            if pyxel.btnp(pyxel.KEY_UP,hold,repeat):
-                newY = max(self.playerY-1,-1)
-            if pyxel.btnp(pyxel.KEY_DOWN,hold,repeat):
-                newY = min(self.playerY+1,self.levelSize)
+            accel = .3
+            deccel = .1
+            max_vel = .4
+
+            # deacel logic
+
+            # if (dir_y == 0 and dir_x == 0):
+            #     if abs(self.player_vel_y) < .04:
+            #         self.player_vel_y = 0
+            #     if abs(self.player_vel_x) < .04:
+            #         self.player_vel_x = 0
+
+            #     if self.player_vel_x > 0:
+            #         self.player_vel_x -= deccel
+            #     elif self.player_vel_x < 0:
+            #         self.player_vel_x += deccel
+
+                # if self.player_vel_y > 0:
+                #     self.player_vel_y -= deccel
+                # elif self.player_vel_y < 0:
+                #     self.player_vel_y += deccel
+
+            #else:
+            #     self.player_vel_x += dir_x * accel
+            #     self.player_vel_y += dir_y * accel
+
+            # self.player_vel_x = max(min(self.player_vel_x,max_vel),-max_vel)
+            # self.player_vel_y = max(min(self.player_vel_y,max_vel),-max_vel)
+
+            # newX = self.playerX + self.player_vel_x
+            # newY = self.playerY + self.player_vel_y
+
+            newX = self.playerX + (dir_x*accel)
+            newY = self.playerY + (dir_y*accel)
           
 #            xVec = -1 * pyxel.btnp(pyxel.KEY_LEFT) + pyxel.btnp(pyxel.KEY_RIGHT)
 #            yVec = -1 * pyxel.btnp(pyxel.KEY_UP) + pyxel.btnp(pyxel.KEY_DOWN)
 #            
-#            newX = max(min(self.playerX+xVec,self.levelSize),-1)
-#            newY = max(min(self.playerY+yVec,self.levelSize),-1)
+            newX = max(min(newX,self.levelSize),-1)
+            newY = max(min(newY,self.levelSize),-1)
+
+            roundX = self.round_player_pos(dir_x,newX)
+            roundY = self.round_player_pos(dir_y,newY)
             
-            
-    
             # check if we need to change levels
-            if (newX == self.levelSize or 
-                newY == self.levelSize or
-                newX < 0 or
-                newY < 0):
-                    self.level = levels.changeLevel(newX,newY,self.levelSize)
-                    if newX == self.levelSize:
+            if (roundX == self.levelSize or 
+                roundY == self.levelSize or
+                roundX < 0 or
+                roundY < 0):
+                    self.level = levels.changeLevel(roundX,roundY,self.levelSize)
+                    if roundX == self.levelSize:
                         newX = 0
-                    elif newX < 0:
+                    elif roundX < 0:
                         newX = self.levelSize - 1
-                    if newY == self.levelSize:
+                    if roundY == self.levelSize:
                         newY = 0
-                    elif newY < 0:
+                    elif roundY < 0:
                         newY = self.levelSize - 1
                         
                     # load AI
                     self.currentAI = levels.loadAI()
 
+            roundX = self.round_player_pos(dir_x,newX)
+            roundY = self.round_player_pos(dir_y,newY)
+
             # check collision
-            if self.level[newY,newX] == 1: # clear floor
+            if self.level[roundY,roundX] == 1: # clear floor
                 self.playerX = newX
                 self.playerY = newY
-            elif self.level[newY,newX] == 3: # npc
-                self.dialogText = dialog.invoke(levels.levelIndex,newX,newY)
-                self.dialogScreen =  True      
+            elif self.level[roundY,roundX] == 3: # npc
+                self.dialogText = dialog.invoke(levels.levelIndex,roundX,roundY)
+                self.dialogScreen =  True
+            else:
+                self.player_vel_y = 0
+                self.player_vel_x = 0
                 
             # player attack
             if self.attack:
@@ -119,7 +172,7 @@ class App:
                     self.attack = False
                 for baddy in self.currentAI:
                     if baddy.alive:
-                        baddy.checkCollision(self.playerX,self.playerY)
+                        baddy.checkCollision(roundX,roundY)
             else:
                 if pyxel.btnp(pyxel.KEY_Z):
                     self.attack = True
@@ -131,7 +184,6 @@ class App:
         gridColor = 6
         
         pyxel.cls(6)
-
         
         posX = 10*self.playerX;
         posY = 10*self.playerY;
@@ -139,33 +191,27 @@ class App:
         # draw map
         for i in range(self.levelSize):
             for j in range(self.levelSize):
-                pyxel.rect(10*i,10*j,(10*i)+9,(10*j)+9,self.level[j,i])
-                pyxel.rectb(10*i,10*j,(10*i)+9,(10*j)+9,gridColor)
+                pyxel.rect(10*i,10*j,9,9,self.level[j,i])
+                pyxel.rectb(10*i,10*j,9,9,gridColor)
         
         # draw ai
         for baddy in self.currentAI:
-            if baddy.alive:
-                pyxel.rect(baddy.x*10,
-                           baddy.y*10,
-                           (baddy.x*10)+9,
-                           (baddy.y*10)+9,
-                           baddy.color)
-
+            baddy.draw_self()
         
         if self.attack:
             pyxel.rect(10*(self.playerX-1),
                        10*(self.playerY-1),
-                       10*(self.playerX+2),
-                       10*(self.playerY+2),
+                       29,
+                       29,
                        12)
-            pyxel.rectb(10*(self.playerX-1),
-                       10*(self.playerY-1),
-                       10*(self.playerX+2),
-                       10*(self.playerY+2),
-                       gridColor)
+            # pyxel.rectb(10*(self.playerX-1),
+            #            10*(self.playerY-1),
+            #            10*(self.playerX+2),
+            #            10*(self.playerY+2),
+            #            gridColor)
         # draw player        
-        pyxel.rect(posX,posY,posX+9,posY+9,8)
-        pyxel.rectb(posX,posY,posX+9,posY+9,gridColor)
+        pyxel.rect(posX,posY,9,9,8)
+        pyxel.rectb(posX,posY,9,9,gridColor)
         
         if self.dialogScreen:
             pyxel.rect(5,5,self.levelSize * 10 - 5,self.levelSize * 2 + 5,0)
@@ -175,10 +221,17 @@ class App:
                 
         # draw health bar
         xHealth = (self.levelSize - 2*(10 - self.playerHealth))*10
-        pyxel.rect(0,self.levelSize*10,xHealth,(self.levelSize*10) + 9,8)
+        pyxel.rect(0,self.levelSize*10,xHealth,9,8)
    
     def reset(self):
         levels.reset(levels)
         self.startGame()
+
+    def round_player_pos(self,dir,val):
+        if dir > 0:
+            return pyxel.ceil(val)
+        else:
+            return pyxel.floor(val)
+
         
 App()
