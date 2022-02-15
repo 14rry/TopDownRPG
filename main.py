@@ -14,18 +14,22 @@ import player
 
 class App:
     def __init__(self):
-        self.levelSize = 20
+        self.levelSize = 16
+        self.grid_size = 8
 
-        pyxel.init(self.levelSize*10, self.levelSize*10+10,fps = 60)
-        
+
+        pyxel.init(self.levelSize*self.grid_size, self.levelSize*self.grid_size+self.grid_size,fps = 60)
+        pyxel.load("topdown.pyxres")
+
         self.startGame()
         
         pyxel.run(self.update, self.draw)
         
     def startGame(self):
-        self.player = player.player(4,17)
+        self.player = player.player(4,4)
         
-        self.level = levels.levels[1,1]
+        self.level = [1,1]
+        #self.level = levels.levels[1,1]
         self.currentAI = levels.loadAI()
         
         self.dialogScreen = False
@@ -71,7 +75,7 @@ class App:
                 roundY == self.levelSize or
                 roundX < 0 or
                 roundY < 0):
-                    self.level = levels.changeLevel(roundX,roundY,self.levelSize)
+                    self.level = levels.changeLevel(roundX,roundY,self.level[0],self.level[1],self.levelSize)
                     if roundX == self.levelSize:
                         newX = 0
                     elif roundX < 0:
@@ -80,23 +84,45 @@ class App:
                         newY = 0
                     elif roundY < 0:
                         newY = self.levelSize - 1
-                        
-                    # load AI
-                    self.currentAI = levels.loadAI()
+                    
+                    # TODO: fix AI with new tilemaps
+                    # # load AI
+                    # self.currentAI = levels.loadAI()
 
             roundX = self.round_player_pos(newX)
             roundY = self.round_player_pos(newY)
+            roundOldX = self.round_player_pos(self.player.x)
+            roundOldY = self.round_player_pos(self.player.y)
 
             # check collision
-            if self.level[roundY,roundX] == 1: # clear floor
+            tm_pos = self.player_pos_to_tm(roundX,roundY)
+            tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+
+            tm_pos = self.player_pos_to_tm(roundOldX,roundY)
+            tm_val_old_x = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+
+            tm_pos = self.player_pos_to_tm(roundX,roundOldY)
+            tm_val_old_y = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+
+            if tm_val == (0,0): # clear floor
                 self.player.x = newX
                 self.player.y = newY
-            elif self.level[roundY,roundX] == 3: # npc
-                self.dialogText = dialog.invoke(levels.levelIndex,roundX,roundY)
-                self.dialogScreen =  True
+            elif tm_val_old_x == (0,0):
+                self.player.y = newY
+            elif tm_val_old_y == (0,0):
+                self.player.x = newX
             else:
                 self.player.vel_y = 0
                 self.player.vel_x = 0
+
+            roundX = self.round_player_pos(newX)
+            roundY = self.round_player_pos(newY)
+            tm_pos = self.player_pos_to_tm(roundX,roundY)
+            tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+
+            if tm_val == (2,1): # npc
+                self.dialogText = dialog.invoke(levels.levelIndex,roundX,roundY) # TODO: need to fix level index with new tilemaps
+                self.dialogScreen =  True
                 
             # player attack
             attackCooldown = 14
@@ -118,43 +144,43 @@ class App:
         
         pyxel.cls(6)
         
-        posX = 10*self.player.x
-        posY = 10*self.player.y
+        posX = self.grid_size*self.player.x
+        posY = self.grid_size*self.player.y
         
         # draw map
-        for i in range(self.levelSize):
-            for j in range(self.levelSize):
-                pyxel.rect(10*i,10*j,10,10,self.level[j,i])
-                #pyxel.rectb(10*i,10*j,10,10,gridColor)
-        
+        pyxel.bltm(0,0,0,self.level[0]*self.levelSize*self.grid_size,self.level[1]*self.levelSize*self.grid_size,self.grid_size*self.levelSize,self.grid_size*self.levelSize,1)
+
         # draw ai
         for baddy in self.currentAI:
             baddy.draw_self()
         
         if self.attack:
-            pyxel.rect(10*(self.player.x-1),
-                       10*(self.player.y-1),
-                       29,
-                       29,
+            #pyxel.image(0.)
+            pyxel.rect(self.grid_size*(self.player.x-1),
+                       self.grid_size*(self.player.y-1),
+                       self.grid_size*3,
+                       self.grid_size*3,
                        12)
-            # pyxel.rectb(10*(self.playerX-1),
-            #            10*(self.playerY-1),
-            #            10*(self.playerX+2),
-            #            10*(self.playerY+2),
+            # pyxel.rectb(self.grid_size*(self.playerX-1),
+            #            self.grid_size*(self.playerY-1),
+            #            self.grid_size*(self.playerX+2),
+            #            self.grid_size*(self.playerY+2),
             #            gridColor)
+
         # draw player        
-        pyxel.rect(posX,posY,9,9,8)
+        # pyxel.rect(posX,posY,self.grid_size,self.grid_size,8)
+        self.player.draw()
         #pyxel.rectb(posX,posY,9,9,gridColor)
         
         if self.dialogScreen:
-            pyxel.rect(5,5,self.levelSize * 10 - 5,self.levelSize * 2 + 5,0)
-            pyxel.rectb(5,5,self.levelSize * 10 - 5,self.levelSize * 2 + 5,3)
+            pyxel.rect(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,0)
+            pyxel.rectb(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,3)
             for textIndex in range(len(self.dialogText)):
-                pyxel.text(10,10*(textIndex+1),self.dialogText[textIndex],3)
+                pyxel.text(self.grid_size,self.grid_size*(textIndex+1),self.dialogText[textIndex],3)
                 
         # draw health bar
-        xHealth = (self.levelSize - 2*(10 - self.player.health))*10
-        pyxel.rect(0,self.levelSize*10,xHealth,9,8)
+        xHealth = (self.levelSize - 2*(self.grid_size - self.player.health))*self.grid_size
+        pyxel.rect(0,self.levelSize*self.grid_size,xHealth,9,8)
    
     def reset(self):
         levels.reset(levels)
@@ -166,6 +192,9 @@ class App:
             return pyxel.ceil(val)
         else:
             return pyxel.floor(val)
+
+    def player_pos_to_tm(self,x,y):
+        return [x + (self.level[0]*self.levelSize),y + (self.level[1]*self.levelSize)]
 
         
 App()

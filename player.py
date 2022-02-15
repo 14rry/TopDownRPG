@@ -17,6 +17,7 @@ class player:
         self.max_vel = .4
         self.vel_x = 0
         self.vel_y = 0
+        self.dir = [0,0]
 
         # for non-velocity movement
         self.speed = .2
@@ -24,6 +25,11 @@ class player:
         self.top_boost = .5
         self.boost = 0
         self.boost_decay = .1
+
+        # keep track of direction player is facing for drawing purposes
+        self.w_mod = 1
+        self.h_mod = 1
+        self.sprite = 0
 
     def move_with_velocity(self,dir_x,dir_y):
         # deacel logic
@@ -87,16 +93,34 @@ class player:
             #newY = max(self.playerY-speed,-1)
         if pyxel.btn(pyxel.KEY_DOWN):
             dir_y += 1
+        
+        self.dir = [dir_x,dir_y]
             #newY = min(self.playerY+speed,self.levelSize)
 
-        # account for faster diagonals
+        # account for faster diagonals .. for some reason this makes it jitter?
         if (dir_y != 0 and dir_x != 0):
             dir_y *= .7
             dir_x *= .7
         
-        # [newX,newY] = self.move_with_velocity(dir_x,dir_y)
-        [newX,newY] = self.move_without_velocity(dir_x,dir_y)
+        # return self.move_with_velocity(dir_x,dir_y)
+        return self.move_without_velocity(dir_x,dir_y) 
 
+    def draw(self):
+        # selects the up/down sprite and sets direction
+        if self.dir[1] == 1:
+            self.w_mod = 1
+            self.sprite = 8
+        elif self.dir[1] == -1:
+            self.w_mod = -1
+            self.sprite = 8
 
-        return [newX,newY]
-        
+        # selects the left/right sprite and sets direction
+        if self.dir[0] == 1:
+            self.sprite = 0
+            self.h_mod = -1
+        elif self.dir[0] == -1:
+            self.sprite = 0
+            self.h_mod = 1
+
+        pyxel.blt(self.x*8,self.y*8,0,self.sprite,8,8*self.h_mod,8*self.w_mod)
+

@@ -162,18 +162,18 @@ level_ai = np.array([[emptyAI,emptyAI,emptyAI,emptyAI],
 maxX = 3
 maxY = 1
 
-def changeLevel(x,y,size):
+def changeLevel(x,y,current_level_x,current_level_y,size):
     if x == size:
-        levelIndex[1] = min(levelIndex[1] + 1,maxX)
+        current_level_x = min(current_level_x+1,maxX)
     elif x < 0:
-        levelIndex[1] = max(levelIndex[1] - 1,0)
+        current_level_x = max(current_level_x-1,0)
         
     if y == size:
-        levelIndex[0] = min(levelIndex[0] + 1,maxY)
+        current_level_y = min(current_level_y + 1,maxY)
     elif y < 0:
-        levelIndex[0] = max(levelIndex[0] - 1,0)
+        current_level_y = max(current_level_x - 1,0)
         
-    return levels[levelIndex[0],levelIndex[1]]
+    return [current_level_x,current_level_y]
 
 def loadAI():
     return level_ai[levelIndex[0],levelIndex[1]]
