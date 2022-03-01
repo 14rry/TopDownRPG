@@ -31,6 +31,7 @@ class MoveableObj:
 
         self.forces = [] # [xforce,yforce,cooldown]
 
+    # step through list of external forces on object and move object accordingly
     def apply_forces(self,newX,newY,tm_val):
         for idx,vals in enumerate(self.forces):
             print(idx,vals)
@@ -48,6 +49,7 @@ class MoveableObj:
 
         return [newX,newY]
 
+    # called from main.py on each moveable object in a level
     def update(self):
         [newX,newY] = self.apply_forces(self.x,self.y,(1,1))
         [self.x,self.y] = self.check_collision(newX,newY)
@@ -89,11 +91,11 @@ class MoveableObj:
         elif col_old_x == 0:
             y_final = newY
             self.dir[0] = 0
-            #self.player.zero_attack_forces_x() # TODO: make this work again
+            self.zero_attack_forces_x()
         elif col_old_y == 0:
             x_final = newX
             self.dir[1] = 0
-            #self.player.zero_attack_forces_y()
+            self.zero_attack_forces_y()
         else:
             self.vel_y = 0
             self.vel_x = 0

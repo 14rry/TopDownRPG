@@ -110,7 +110,7 @@ class Player(moveable_obj.MoveableObj):
             self.dir = [dir_x,dir_y]
                 #newY = min(self.playerY+speed,self.levelSize)
 
-            # account for faster diagonals .. for some reason this makes it jitter?
+            # account for faster diagonals
             if (dir_y != 0 and dir_x != 0):
                 dir_y *= .7
                 dir_x *= .7
@@ -175,7 +175,7 @@ class Player(moveable_obj.MoveableObj):
                 # check scenery collision.. change this to simple box collision check rather than
                 #   checking each cardinal direction
                 for level_obj in self.levels.level_objs:
-                    # collision box way bigger for some reason
+                    # BUG: collision box way bigger than it should be for some reason
                     if self.box_collision_detect(min_x,min_y,w,h,level_obj.x,level_obj.y,8,8) == True:
                         print('collide')
                         # calc direction and apply force

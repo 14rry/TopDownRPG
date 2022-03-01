@@ -29,8 +29,6 @@ class App:
         self.levels = levels.LevelHandler()
         self.player = player.Player(4,4,self.levels)
         
-        self.level = [1,1]
-        #self.level = levels.levels[1,1]
         #self.currentAI = levels.loadAI()
         
         self.dialogScreen = False
@@ -58,46 +56,11 @@ class App:
         
         [newX,newY] = self.player.move()
 
-        # lock inside level.. not needed because we change level when player leaves screen
-        # newX = max(min(newX,self.levelSize),-1)
-        # newY = max(min(newY,self.levelSize),-1)
-        
         roundX = self.round_player_pos(newX)
         roundY = self.round_player_pos(newY)
         
         # check if we need to change levels
         [newX,newY] = self.levels.check_for_change(roundX,roundY,newX,newY)
-
-        # level collision
-        # roundX = self.round_player_pos(newX)
-        # roundY = self.round_player_pos(newY)
-        # roundOldX = self.round_player_pos(self.player.x)
-        # roundOldY = self.round_player_pos(self.player.y)
-
-        # # check collision on current position
-        # col_now = self.levels.check_tile_collision(roundX,roundY)
-
-        # # collision on old x (allows sliding along walls)
-        # col_old_x = self.levels.check_tile_collision(roundOldX,roundY)
-        
-        # # collision on old y (allows sliding along walls)
-        # col_old_y = self.levels.check_tile_collision(roundX,roundOldY)
-        
-        # if col_now == 0: # clear floor
-        #     self.player.x = newX
-        #     self.player.y = newY
-        # elif col_old_x == 0:
-        #     self.player.y = newY
-        #     self.player.dir[0] = 0
-        #     self.player.zero_attack_forces_x()
-        # elif col_old_y == 0:
-        #     self.player.x = newX
-        #     self.player.dir[1] = 0
-        #     self.player.zero_attack_forces_y()
-        # else:
-        #     self.player.vel_y = 0
-        #     self.player.vel_x = 0
-
         [newX,newY] = self.player.check_collision(newX,newY)
         self.player.x = newX
         self.player.y = newY
@@ -108,7 +71,7 @@ class App:
         tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
 
         if tm_val == (2,1): # npc
-            self.dialogText = dialog.invoke(self.levels.level_index,roundX,roundY) # TODO: need to fix level index with new tilemaps
+            self.dialogText = dialog.invoke(self.levels.level_index,roundX,roundY)
             self.dialogScreen =  True
 
         for level_obj in self.levels.level_objs:

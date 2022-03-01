@@ -82,10 +82,17 @@ class LevelHandler:
 
         return [newX,newY]
 
+    # returns 1 if wall, 0 if floor, -1 if error
     def check_tile_collision(self,roundX,roundY):
         tm_pos = self.player_pos_to_tm(roundX,roundY)
         tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
-        return tile_lookup.collision[tm_val[1]][tm_val[0]]
+        #print(len(tile_lookup.collision[0]),len(tile_lookup.collision))
+        if tm_val[0] >= len(tile_lookup.collision[0]) or tm_val[1] >= len(tile_lookup.collision):
+            print('check_tile_collision lookup error out of bounds, tm_val:')
+            print(tm_val)
+            return -1
+        else:
+            return tile_lookup.collision[tm_val[1]][tm_val[0]]
 
     def player_pos_to_tm(self,x,y):
         return [x + (self.level_index[0]*self.level_size),y + (self.level_index[1]*self.level_size)]
