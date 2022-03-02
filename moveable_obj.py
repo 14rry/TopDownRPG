@@ -63,7 +63,7 @@ class MoveableObj:
             self.forces[idx][1] = 0
 
     def draw(self):
-        pyxel.blt(self.x*8, self.y*8, 0, self.sprite_index[0]*8, self.sprite_index[1]*8,8,8)
+        pyxel.blt(self.x*8, self.y*8, 0, self.sprite_index[0]*8, self.sprite_index[1]*8,8,8,15)
 
     def check_collision(self,newX,newY):
 

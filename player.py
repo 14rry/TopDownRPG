@@ -97,18 +97,14 @@ class Player(moveable_obj.MoveableObj):
         if tm_val != (3,0):
             if pyxel.btn(pyxel.KEY_RIGHT):
                 dir_x += 1
-                #newX = min(self.playerX+speed,self.levelSize)
             if pyxel.btn(pyxel.KEY_LEFT):
                 dir_x -= 1
-                #newX = max(self.playerX-speed,-1)
             if pyxel.btn(pyxel.KEY_UP):
                 dir_y -= 1
-                #newY = max(self.playerY-speed,-1)
             if pyxel.btn(pyxel.KEY_DOWN):
                 dir_y += 1
             
             self.dir = [dir_x,dir_y]
-                #newY = min(self.playerY+speed,self.levelSize)
 
             # account for faster diagonals
             if (dir_y != 0 and dir_x != 0):
@@ -175,27 +171,16 @@ class Player(moveable_obj.MoveableObj):
                 # check scenery collision.. change this to simple box collision check rather than
                 #   checking each cardinal direction
                 for level_obj in self.levels.level_objs:
-                    # BUG: collision box way bigger than it should be for some reason
-                    if self.box_collision_detect(min_x,min_y,w,h,level_obj.x,level_obj.y,8,8) == True:
-                        print('collide')
-                        # calc direction and apply force
-                        # this approach is trash
-                        # TODO: calculate angle
-                        dir_x = 0
-                        dir_y = 0
-                        if self.x > level_obj.x:
-                            dir_x = -1
-                        elif self.x < level_obj.x:
-                            dir_x = 1
+                    if self.box_collision_detect(min_x*8,min_y*8,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
 
-                        if self.y > level_obj.y:
-                            dir_y = -1
-                        elif self.y < level_obj.y:
-                            dir_y = 1
+                        # calculate angle between player and object and apply force in that direction
+                        angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
+                        dir_x = pyxel.cos(angle)
+                        dir_y = pyxel.sin(angle)
 
                         level_obj.forces.append(
-                            [dir_x*self.attack_knockback_force,
-                            dir_y*self.attack_knockback_force,
+                            [-dir_x*self.attack_knockback_force,
+                            -dir_y*self.attack_knockback_force,
                             self.attack_knockback_cooldown])
 
                 print(attack_force_x_dir,attack_force_y_dir)

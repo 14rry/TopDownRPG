@@ -98,4 +98,4 @@ class LevelHandler:
         return [x + (self.level_index[0]*self.level_size),y + (self.level_index[1]*self.level_size)]
 
     def draw(self):
-        pyxel.bltm(0,0,0,self.level_index[0]*self.level_size*self.grid_size,self.level_index[1]*self.level_size*self.grid_size,self.grid_size*self.level_size,self.grid_size*self.level_size)
+        pyxel.bltm(0,0,0,self.level_index[0]*self.level_size*self.grid_size,self.level_index[1]*self.level_size*self.grid_size,self.grid_size*self.level_size,self.grid_size*self.level_size,15)
