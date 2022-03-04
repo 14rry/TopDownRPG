@@ -51,7 +51,9 @@ class MoveableObj:
 
     # called from main.py on each moveable object in a level
     def update(self):
-        [newX,newY] = self.apply_forces(self.x,self.y,(1,1))
+        # TODO: get tm value
+        tm_val = (1,1) # hard coded out of laziness for now
+        [newX,newY] = self.apply_forces(self.x,self.y,tm_val)
         [self.x,self.y] = self.check_collision(newX,newY)
 
     def zero_attack_forces_x(self):
