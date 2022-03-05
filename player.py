@@ -37,38 +37,41 @@ class Player(moveable_obj.MoveableObj):
         self.attack_cooldown = 14
         self.attack_knockback_force = .5
         self.attack_knockback_cooldown = 5
+        self.wall_pushback_x = 0
+        self.wall_pushback_y = 0
 
-    def move_with_velocity(self,dir_x,dir_y):
+    def move_with_velocity(self,dir_x,dir_y,tm_val):
         # deacel logic
-        if dir_y == 0:
-            if abs(self.vel_y) < .1:
-                self.vel_y = 0
-            else:
-                self.vel_y -= self.deccel*pyxel.sgn(self.vel_y)
+        if tm_val != (3,0):
+            if dir_y == 0:
+                if abs(self.vel_y) < .1:
+                    self.vel_y = 0
+                else:
+                    self.vel_y -= self.deccel*pyxel.sgn(self.vel_y)
 
-        if dir_x == 0:
-            if abs(self.vel_x) < .1:
-                self.vel_x = 0
-            else:
-                self.vel_x -= self.deccel*pyxel.sgn(self.vel_x)
+            if dir_x == 0:
+                if abs(self.vel_x) < .1:
+                    self.vel_x = 0
+                else:
+                    self.vel_x -= self.deccel*pyxel.sgn(self.vel_x)
 
-        self.vel_x += dir_x * self.accel
-        self.vel_y += dir_y * self.accel
+            self.vel_x += dir_x * self.accel
+            self.vel_y += dir_y * self.accel
 
-        self.vel_x = max(min(self.vel_x,self.max_vel),-self.max_vel)
-        self.vel_y = max(min(self.vel_y,self.max_vel),-self.max_vel)
+            self.vel_x = max(min(self.vel_x,self.max_vel),-self.max_vel)
+            self.vel_y = max(min(self.vel_y,self.max_vel),-self.max_vel)
 
-        self.vel_x += dir_x * self.boost
-        self.vel_y += dir_y * self.boost
+            self.vel_x += dir_x * self.boost
+            self.vel_y += dir_y * self.boost
 
-        if dir_x != 0 and dir_y != 0:
-            self.vel_x *= .88
-            self.vel_y *= .88 # this value depends on max vel... not sure the true math behind this
-            # find the value by printing the magnitude (below) and moving diagonal
-            # fine tune the value until the diagonal max magnitude is the same as non-diagonal
+            if dir_x != 0 and dir_y != 0:
+                self.vel_x *= .88
+                self.vel_y *= .88 # this value depends on max vel... not sure the true math behind this
+                # find the value by printing the magnitude (below) and moving diagonal
+                # fine tune the value until the diagonal max magnitude is the same as non-diagonal
 
         # debug print magnitude
-        print(pyxel.sqrt(self.vel_x*self.vel_x+self.vel_y*self.vel_y))
+        #print(pyxel.sqrt(self.vel_x*self.vel_x+self.vel_y*self.vel_y))
 
         newX = self.x + self.vel_x
         newY = self.y + self.vel_y
@@ -117,7 +120,7 @@ class Player(moveable_obj.MoveableObj):
         if pyxel.btnp(pyxel.KEY_X) and self.boost <= 0:
             self.boost = self.top_boost
         
-        [newX,newY] = self.move_with_velocity(dir_x,dir_y)
+        [newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
 
         tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
         tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
@@ -147,41 +150,8 @@ class Player(moveable_obj.MoveableObj):
             if pyxel.btnp(pyxel.KEY_Z):
                 self.attack = True
                 self.attackFrame = pyxel.frame_count
-
-                # attack pushback
-                [min_x,min_y,w,h] = self.get_attack_bounds()
-                max_x = round((min_x + w - 8)/8)
-                max_y = round((min_y + h - 8)/8)
-                min_x = round(min_x/8)
-                min_y = round(min_y/8)
-                cur_x = round(self.x)
-                cur_y = round(self.y)
-                # pos_check = [
-                #     (min_x,cur_y),
-                #     (max_x,cur_y),
-                #     (cur_x,min_y),
-                #     (cur_x,max_y),
-                #     (max_x,max_y),
-                #     (min_x,min_y),
-                #     (min_x,max_y),
-                #     (max_x,min_y)] # diagonals case
-                # dir_check = [(1,0),(-1,0),(0,1),(0,-1),(-1,-1),(1,1),(1,-1),(-1,1)]
-                pos_check = [
-                    (min_x,cur_y),
-                    (max_x,cur_y),
-                    (cur_x,min_y),
-                    (cur_x,max_y),
-                    ] # TODO: add diagonals case
-                dir_check = [(1,0),(-1,0),(0,1),(0,-1)]
-
-                attack_force_x_dir = 0
-                attack_force_y_dir = 0
-
-                for idx,vals in enumerate(pos_check):
-                    # check map collision
-                    if self.levels.check_tile_collision(round(vals[0]),round(vals[1])) == 1:
-                        attack_force_x_dir += dir_check[idx][0]
-                        attack_force_y_dir += dir_check[idx][1]
+                self.attack_wall_pushback()
+                
 
                 # check scenery collision.. change this to simple box collision check rather than
                 #   checking each cardinal direction
@@ -198,14 +168,42 @@ class Player(moveable_obj.MoveableObj):
                             -dir_y*self.attack_knockback_force,
                             self.attack_knockback_cooldown])
 
-                print(attack_force_x_dir,attack_force_y_dir)
+    def attack_wall_pushback(self):
+        # attack pushback
+        [min_x,min_y,w,h] = self.get_attack_bounds()
+        max_x = round((min_x + w - 8)/8)
+        max_y = round((min_y + h - 8)/8)
+        min_x = round(min_x/8)
+        min_y = round(min_y/8)
+        cur_x = round(self.x)
+        cur_y = round(self.y)
+        pos_check = [
+            (min_x,cur_y),
+            (max_x,cur_y),
+            (cur_x,min_y),
+            (cur_x,max_y),
+            (max_x,max_y),
+            (min_x,min_y),
+            (min_x,max_y),
+            (max_x,min_y)] # diagonals case
+        dir_check = [(1,0),(-1,0),(0,1),(0,-1),(-1,-1),(1,1),(1,-1),(-1,1)]
 
-                # TODO: normalize wall pushback to magnitude of 1
+        attack_force_x_dir = 0
+        attack_force_y_dir = 0
 
-                self.forces.append(
-                    [attack_force_x_dir*self.attack_knockback_force,
-                    attack_force_y_dir*self.attack_knockback_force,
-                    self.attack_knockback_cooldown])
+        for idx,vals in enumerate(pos_check):
+            # check map collision
+            if self.levels.check_tile_collision(round(vals[0]),round(vals[1])) == 1:
+                attack_force_x_dir += dir_check[idx][0]
+                attack_force_y_dir += dir_check[idx][1]
+
+        if not (attack_force_x_dir == 0 and attack_force_y_dir == 0): # wall collision happened
+            force_dir = pyxel.atan2(attack_force_y_dir,attack_force_x_dir)
+            self.wall_pushback_x = self.attack_knockback_force*pyxel.cos(force_dir)
+            self.wall_pushback_y = self.attack_knockback_force*pyxel.sin(force_dir)
+            self.forces.append(
+                [self.wall_pushback_x,self.wall_pushback_y,
+                self.attack_knockback_cooldown])
 
     def box_collision_detect(self,x1,y1,w1,h1,x2,y2,w2,h2):
         if (x1 < x2 + w2 and
@@ -246,7 +244,12 @@ class Player(moveable_obj.MoveableObj):
         pyxel.blt(self.x*8,self.y*8,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
 
         # draw line showing movement for debugging
-        pyxel.line(self.x*8, self.y*8,(self.x+pyxel.cos(self.move_angle)*(self.vel_magnitude+1))*8,(self.y+pyxel.sin(self.move_angle)*(self.vel_magnitude+1))*8, 3)
+        #pyxel.line(self.x*8, self.y*8,(self.x+pyxel.cos(self.move_angle)*(self.vel_magnitude+1))*8,(self.y+pyxel.sin(self.move_angle)*(self.vel_magnitude+1))*8, 3)
+        
+        # draw attack wall push direction
+        sx = self.x*8+4
+        sy = self.y*8+4
+        pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
 
 
     def draw_attack(self):

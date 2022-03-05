@@ -35,24 +35,25 @@ class MoveableObj:
     def apply_forces(self,newX,newY,tm_val):
         for idx,vals in enumerate(self.forces):
             print(idx,vals)
-            newX += vals[0]
-            newY += vals[1]
+            if self.forces[idx][2] > 0 or tm_val == (3,0): # space
+                newX += vals[0]
+                newY += vals[1]
 
-            self.forces[idx][2] -= 1 
-            
-            # handle space.. don't decrease past one.. TODO: doesn't work when > 2 squares away
-            if tm_val == (3,0) and self.forces[idx][2] <= 1:
-                self.forces[idx][2] = 1
+            if tm_val != (3,0):
+                self.forces[idx][2] -= 1
+            else:
+                print('space!')
+                print(self.forces[idx][2])
 
-            if self.forces[idx][2] <= 0 or (vals[0] == 0 and vals[1] == 0):
+            if self.forces[idx][2] <= -2 or (vals[0] == 0 and vals[1] == 0): # going down to -2 gives wiggle room for space
                 self.forces.pop(idx)
 
         return [newX,newY]
 
     # called from main.py on each moveable object in a level
     def update(self):
-        # TODO: get tm value
-        tm_val = (1,1) # hard coded out of laziness for now
+        tm_val = self.get_tilemap_value()
+
         [newX,newY] = self.apply_forces(self.x,self.y,tm_val)
         [self.x,self.y] = self.check_collision(newX,newY)
 
@@ -103,6 +104,10 @@ class MoveableObj:
             self.vel_x = 0
 
         return [x_final,y_final]
+    
+    def get_tilemap_value(self):
+        tm_pos = self.levels.player_pos_to_tm(round(self.x),round(self.y))
+        return pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
 
 
 
