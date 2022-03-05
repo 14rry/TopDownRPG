@@ -35,8 +35,10 @@ class Player(moveable_obj.MoveableObj):
         self.attack = False
         self.attack_frame = 0
         self.attack_cooldown = 14
-        self.attack_knockback_force = .5
+        self.attack_knockback_force = .5 # knockback from wall
         self.attack_knockback_cooldown = 5
+        self.attack_object_force = .1 # force against moveable_obj
+        self.attack_object_cooldown = 5
         self.wall_pushback_x = 0
         self.wall_pushback_y = 0
 
@@ -136,37 +138,39 @@ class Player(moveable_obj.MoveableObj):
         #return self.move_without_velocity(dir_x,dir_y)
 
     def process_attack(self):
+        if not self.attack and pyxel.btnp(pyxel.KEY_Z):
+            self.attack = True
+            self.attackFrame = pyxel.frame_count
+
+            # do stuff that only happens on first attack frame
+            self.attack_wall_pushback()
+
+        
         # player attack
-        if self.attack:
+        if self.attack: # attack still alive from a previous frame
             if pyxel.frame_count - self.attackFrame > self.attack_cooldown:
                 self.attack = False
+            else: # attack not finished, do stuff that happens on every attack frame
 
-            # enemy collisions
-            # for baddy in self.currentAI:
-            #     if baddy.alive:
-            #         baddy.checkCollision(roundX,roundY)
+                # enemy collisions
+                # for baddy in self.currentAI:
+                #     if baddy.alive:
+                #         baddy.checkCollision(roundX,roundY)
 
-        else:
-            if pyxel.btnp(pyxel.KEY_Z):
-                self.attack = True
-                self.attackFrame = pyxel.frame_count
-                self.attack_wall_pushback()
-                
+                # check scenery collision
+                [min_x,min_y,w,h] = self.get_attack_bounds()
 
-                # check scenery collision.. change this to simple box collision check rather than
-                #   checking each cardinal direction
                 for level_obj in self.levels.level_objs:
-                    if self.box_collision_detect(min_x*8,min_y*8,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-
+                    if self.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
                         # calculate angle between player and object and apply force in that direction
                         angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
                         dir_x = pyxel.cos(angle)
                         dir_y = pyxel.sin(angle)
 
                         level_obj.forces.append(
-                            [-dir_x*self.attack_knockback_force,
-                            -dir_y*self.attack_knockback_force,
-                            self.attack_knockback_cooldown])
+                            [-dir_x*self.attack_object_force,
+                            -dir_y*self.attack_object_force,
+                            self.attack_object_cooldown])
 
     def attack_wall_pushback(self):
         # attack pushback

@@ -28,7 +28,7 @@ class App:
     def startGame(self):
         self.levels = levels.LevelHandler()
         self.player = player.Player(4,4,self.levels)
-        self.levels.level_index = [4,0]
+        self.levels.level_index = [1,1] # starting level
         
         #self.currentAI = levels.loadAI()
         
