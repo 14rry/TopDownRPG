@@ -245,7 +245,9 @@ class Player(moveable_obj.MoveableObj):
             self.sprite = 0
             self.h_mod = 1
 
-        pyxel.blt(self.x*8,self.y*8,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
+        # TODO: account for camera position when drawing player
+
+        pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
 
         # draw line showing movement for debugging
         #pyxel.line(self.x*8, self.y*8,(self.x+pyxel.cos(self.move_angle)*(self.vel_magnitude+1))*8,(self.y+pyxel.sin(self.move_angle)*(self.vel_magnitude+1))*8, 3)

@@ -18,7 +18,7 @@ class App:
         self.levelSize = 16
         self.grid_size = 8
 
-        pyxel.init(self.levelSize*self.grid_size, self.levelSize*self.grid_size+self.grid_size,fps = 60)
+        pyxel.init(self.levelSize*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
         pyxel.load("topdown.pyxres")
 
         self.startGame()
@@ -28,7 +28,7 @@ class App:
     def startGame(self):
         self.levels = levels.LevelHandler()
         self.player = player.Player(4,4,self.levels)
-        self.levels.level_index = [1,1] # starting level
+        self.levels.level_index = [1,2] # starting level
         
         #self.currentAI = levels.loadAI()
         
@@ -77,6 +77,8 @@ class App:
 
         for level_obj in self.levels.level_objs:
             level_obj.update()
+
+        self.levels.camera.update(self.player.x,self.player.y)
             
         self.player.process_attack()
 

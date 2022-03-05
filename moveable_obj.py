@@ -34,16 +34,15 @@ class MoveableObj:
     # step through list of external forces on object and move object accordingly
     def apply_forces(self,newX,newY,tm_val):
         for idx,vals in enumerate(self.forces):
-            print(idx,vals)
             if self.forces[idx][2] > 0 or tm_val == (3,0): # space
                 newX += vals[0]
                 newY += vals[1]
 
             if tm_val != (3,0):
                 self.forces[idx][2] -= 1
-            else:
-                print('space!')
-                print(self.forces[idx][2])
+            # else:
+            #     print('space!')
+            #     print(self.forces[idx][2])
 
             if self.forces[idx][2] <= -2 or (vals[0] == 0 and vals[1] == 0): # going down to -2 gives wiggle room for space
                 self.forces.pop(idx)

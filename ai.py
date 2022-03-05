@@ -9,6 +9,7 @@ class ai:
         self.alive = alive
         self.size = 9
         
+    # check if the player's attack hits the enemy.. should probably be moved    
     def checkCollision(self,x,y):
         xMin = x - 1
         xMax = x + 1
@@ -21,7 +22,7 @@ class ai:
 
     def draw_self(self):
         if not self.alive:
-            self.size -= 1
+            self.size -= 1 # shrink on death
         if self.size > 0:
             pyxel.rect(self.x*10,
                         self.y*10,
