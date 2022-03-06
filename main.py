@@ -19,6 +19,7 @@ class App:
         self.grid_size = 8
 
         pyxel.init(self.levelSize*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
+        
         pyxel.load("topdown.pyxres")
 
         self.startGame()
@@ -65,6 +66,8 @@ class App:
         [newX,newY] = self.player.check_collision(newX,newY)
         self.player.x = newX
         self.player.y = newY
+
+        #print(newX,newY)
 
         roundX = self.round_player_pos(newX)
         roundY = self.round_player_pos(newY)

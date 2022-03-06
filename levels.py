@@ -23,37 +23,31 @@ class LevelHandler:
 
         self.camera = camera.Camera(self.screen_size)
 
-    def change_level(self,x,y,size):
+    def change_level(self,new_level,level_offset):
 
-        print(x,x/16,pyxel.floor(x/16))
-
-        current_level_x = self.level_index[0] #+ pyxel.floor(x/16)
-        current_level_y = self.level_index[1] #+ pyxel.floor(y/16)
-        if x == size[0]:
-            current_level_x = current_level_x+1
-        elif x < 0:
-            current_level_x = current_level_x-1
-            
-        if y == size[1]:
-            current_level_y = current_level_y + 1
-        elif y < 0:
-            current_level_y = current_level_y - 1
-
-        self.level_index = [current_level_x, current_level_y]
+        self.level_index = [self.level_index[0] + level_offset[0] + new_level[0], 
+            self.level_index[1] + level_offset[1] + new_level[1]]
 
         # handle multi-screen levels
-        if self.level_index == [1,3] or self.level_index == [2,3]:
-            self.level_size = [16*4,16*4]
-            self.level_index = [1,3]
-        elif self.level_index == [2,2]:
-            self.level_size = [16*4,16]
+        player_offset = [0,0]
+        if self.level_index == [1,3] or self.level_index == [2,3]: # need to account for all cases... this could get annoying
+            self.level_size = [16*2,16*2]
+            if self.level_index == [2,3]: # account for being able to enter into another level index which is shared in the big room
+                self.level_index = [1,3]
+                player_offset = [16,0]
+        elif self.level_index == [2,2] or self.level_index == [3,2]:
+            self.level_size = [16*2,16]
+            if self.level_index == [3,2]:
+                self.level_index = [2,2]
+                player_offset = [16,0]
         else:
             self.level_size = [16,16]
+            player_offset = [0,0]
 
         print("level:",self.level_index)
 
 
-        self.camera.change_level(self.level_size)
+        self.camera.change_level(self.level_size,player_offset)
 
         # build list of active scenery, ai, etc. based on presence of certain special tiles
         pyxel.load("topdown.pyxres") # TODO: this is a bad workaround for resetting tilemap after changing for scenery..
@@ -68,7 +62,7 @@ class LevelHandler:
                     # replace ball tile with floor
                     pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
             
-        return [current_level_x,current_level_y]
+        return player_offset
 
     # def loadAI():
     #     return level_ai[levelIndex[0],levelIndex[1]]
@@ -86,15 +80,31 @@ class LevelHandler:
             roundY == self.level_size[1] or
             roundX < 0 or
             roundY < 0):
-                self.change_level(roundX,roundY,self.level_size)
-                if roundX == self.screen_size:
+                new_level = [0,0]
+                if roundX == self.level_size[0]:
+                    new_level = [1,0]
+                    level_offset = [pyxel.floor((newX-1)/16),pyxel.floor(newY/16)] # accounts for the possibility of being on a different level in big rooms (i.e. if player moves to the right in a big room, the true 'level' index could be 2,3 instead of 1,3)
+                    #level_offset = [0,pyxel.floor(newY/16)] # accounts for the possibility of being on a different level in big rooms (i.e. if player moves to the right in a big room, the true 'level' index could be 2,3 instead of 1,3)
                     newX = 0
                 elif roundX < 0:
+                    new_level = [-1,0]
+                    level_offset = [pyxel.floor((newX+1)/16),pyxel.floor(newY/16)]
                     newX = self.screen_size - 1
-                if roundY == self.screen_size:
+                if roundY == self.level_size[1]:
+                    new_level = [0,1]
+                    level_offset = [pyxel.floor(newX/16),pyxel.floor((newY-1)/16)]
                     newY = 0
                 elif roundY < 0:
+                    new_level = [0,-1]
+                    level_offset = [pyxel.floor(newX/16),pyxel.floor((newY+1)/16)]
                     newY = self.screen_size - 1
+
+
+                player_offset = self.change_level(new_level,level_offset)
+
+                print('lvl off:',level_offset)
+                newX += player_offset[0] - level_offset[0]*16
+                newY += player_offset[1] - level_offset[1]*16
 
                 print(newX,newY)
                 
