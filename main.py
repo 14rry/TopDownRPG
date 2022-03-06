@@ -17,6 +17,7 @@ class App:
     def __init__(self):
         self.levelSize = 16
         self.grid_size = 8
+        self.playing_music = False
 
         pyxel.init(self.levelSize*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
         
@@ -25,6 +26,7 @@ class App:
         self.startGame()
         
         pyxel.run(self.update, self.draw)
+
         
     def startGame(self):
         self.levels = levels.LevelHandler()
@@ -41,11 +43,19 @@ class App:
 
         #pyxel.playm(1,0,True)
 
+
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
         if pyxel.btnp(pyxel.KEY_R):
             self.reset()
+        if pyxel.btnp(pyxel.KEY_M):
+            if self.playing_music:
+                pyxel.stop()
+                self.playing_music = False
+            else:
+                pyxel.playm(1,0,True)
+                self.playing_music = True
             
         if self.dialogScreen:
             if pyxel.btnr(pyxel.KEY_Z):

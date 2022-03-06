@@ -12,8 +12,8 @@ class Player(moveable_obj.MoveableObj):
         self.health = 10
 
         # movement properties
-        self.accel = .03
-        self.deccel = .01
+        self.accel = .02
+        self.deccel = .1
         self.max_vel = .2
         self.vel_x = 0
         self.vel_y = 0
@@ -147,6 +147,7 @@ class Player(moveable_obj.MoveableObj):
             self.boost = self.top_boost
             pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
         
+        #[newX,newY] = self.move_without_velocity(dir_x,dir_y)
         [newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
         #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
 
@@ -228,7 +229,7 @@ class Player(moveable_obj.MoveableObj):
 
         for idx,vals in enumerate(pos_check):
             # check map collision
-            if self.levels.check_tile_collision(round(vals[0]),round(vals[1])) == 1:
+            if self.levels.check_tile_collision(round(vals[0]),round(vals[1]),light_up = True) == 1:
                 attack_force_x_dir += dir_check[idx][0]
                 attack_force_y_dir += dir_check[idx][1]
 
@@ -236,6 +237,7 @@ class Player(moveable_obj.MoveableObj):
             force_dir = pyxel.atan2(attack_force_y_dir,attack_force_x_dir)
             self.wall_pushback_x = self.attack_knockback_force*pyxel.cos(force_dir)
             self.wall_pushback_y = self.attack_knockback_force*pyxel.sin(force_dir)
+            print('force dir:',force_dir)
             self.forces.append(
                 [self.wall_pushback_x,self.wall_pushback_y,
                 self.attack_knockback_cooldown])
