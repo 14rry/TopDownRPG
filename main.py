@@ -28,8 +28,8 @@ class App:
         
     def startGame(self):
         self.levels = levels.LevelHandler()
-        self.player = player.Player(4,4,self.levels)
-        self.levels.level_index = [1,2] # starting level
+        self.player = player.Player(1,1,self.levels)
+        self.levels.level_index = [5,0] # starting level
         
         #self.currentAI = levels.loadAI()
         
@@ -64,10 +64,14 @@ class App:
         roundY = self.round_player_pos(newY)
         
         # check if we need to change levels
-        [newX,newY] = self.levels.check_for_change(roundX,roundY,newX,newY)
+        [newX,newY,did_change] = self.levels.check_for_change(roundX,roundY,newX,newY)            
         [newX,newY] = self.player.check_collision(newX,newY)
         self.player.x = newX
         self.player.y = newY
+
+        if did_change:
+            self.player.level_start_x = newX
+            self.player.level_start_y = newY
 
         #print(newX,newY)
 

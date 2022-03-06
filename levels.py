@@ -79,6 +79,7 @@ class LevelHandler:
         #                  [level1_ai,emptyAI,emptyAI,emptyAI]])
 
     def check_for_change(self,roundX,roundY,newX,newY):
+        level_did_change = False
         if (roundX == self.level_size[0] or 
             roundY == self.level_size[1] or
             roundX < 0 or
@@ -102,7 +103,6 @@ class LevelHandler:
                     level_offset = [pyxel.floor(newX/16),pyxel.floor((newY+1)/16)]
                     newY = self.screen_size - 1
 
-
                 player_offset = self.change_level(new_level,level_offset)
 
                 print('lvl off:',level_offset)
@@ -110,12 +110,12 @@ class LevelHandler:
                 newY += player_offset[1] - level_offset[1]*16
 
                 print(newX,newY)
-                
+                level_did_change = True
                 # TODO: fix AI with new tilemaps
                 # # load AI
                 # self.currentAI = levels.loadAI()
 
-        return [newX,newY]
+        return [newX,newY,level_did_change]
 
     # returns 1 if wall, 0 if floor, -1 if error
     def check_tile_collision(self,roundX,roundY):

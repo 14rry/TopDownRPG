@@ -6,6 +6,9 @@ class MoveableObj:
         self.x = x
         self.y = y
         self.levels = levels
+
+        self.level_start_x = self.x
+        self.level_start_y = self.y
         
         self.health = 10
 
@@ -71,10 +74,40 @@ class MoveableObj:
 
     def check_collision(self,newX,newY):
 
+        [newX,newY] = self.spike_collision(newX,newY)
+        [newX,newY] = self.wall_collision_check(newX,newY)
+
+        return [newX,newY]
+
+    def spike_collision(self,newX,newY):
+       
+        # check collision on current position
+        # check each edge
+        col_now = 0
+        pos_check_offset = [[-1,-1],[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1],[0,-1]]
+        for offset in pos_check_offset:
+            test_x = round(newX+(offset[0]*.4))
+            test_y = round(newY+(offset[1]*.4))
+            col_now = self.levels.check_tile_collision(test_x,test_y)
+
+            if col_now == 2:
+                print(test_x,test_y,newY,offset[1])
+                break
+
+        if col_now == 2:
+            self.health -= 1
+            newX = self.level_start_x
+            newY = self.level_start_y
+            print('ow')
+
+        return [newX,newY]
+
+
+    def wall_collision_check(self,newX,newY):
+
         x_final = self.x
         y_final = self.y
 
-         # level collision
         roundX = round(newX)
         roundY = round(newY)
         roundOldX = round(self.x)
