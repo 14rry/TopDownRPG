@@ -39,6 +39,8 @@ class App:
         self.attack = False
         self.attack_frame = 0
 
+        #pyxel.playm(1,0,True)
+
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()

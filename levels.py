@@ -30,27 +30,30 @@ class LevelHandler:
 
         # handle multi-screen levels
         player_offset = [0,0]
-        if self.level_index == [1,3] or self.level_index == [2,3]: # need to account for all cases... this could get annoying
-            self.level_size = [16*2,16*2]
-            if self.level_index == [2,3]: # account for being able to enter into another level index which is shared in the big room
-                self.level_index = [1,3]
-                player_offset = [16,0]
-        elif self.level_index == [2,2] or self.level_index == [3,2]:
-            self.level_size = [16*2,16]
-            if self.level_index == [3,2]:
-                self.level_index = [2,2]
-                player_offset = [16,0]
-        else:
+
+        is_big_room = False
+        for big_rooms in tile_lookup.big_rooms:
+            if is_big_room:
+                break
+            for idx,room in enumerate(big_rooms[:-2]):
+                print(room)
+                if self.level_index == room:
+                    is_big_room = True
+                    self.level_size = big_rooms[-1]
+                    if idx > 0: # not the origin room
+                        self.level_index = big_rooms[0] # set level index to origin room
+                        player_offset = [(room[0]-big_rooms[0][0])*16,(room[1]-big_rooms[0][1])*16]
+                    break
+
+        if not is_big_room:
             self.level_size = [16,16]
-            player_offset = [0,0]
 
         print("level:",self.level_index)
-
 
         self.camera.change_level(self.level_size,player_offset)
 
         # build list of active scenery, ai, etc. based on presence of certain special tiles
-        pyxel.load("topdown.pyxres") # TODO: this is a bad workaround for resetting tilemap after changing for scenery..
+        pyxel.load("topdown.pyxres",False,True,False,False) # TODO: this is a bad workaround for resetting tilemap after changing for scenery..
 
         self.level_objs = []
         for i in range(self.level_size[0]):

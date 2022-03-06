@@ -1,6 +1,7 @@
 import pyxel
 import moveable_obj
 import utilities
+import sound_lookup
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -87,6 +88,29 @@ class Player(moveable_obj.MoveableObj):
 
         return [newX,newY]
 
+    def move_like_a_car(self,dir_x,dir_y):
+        if dir_y < 0: # car accelerating
+            self.vel_magnitude += self.accel
+            self.vel_magnitude = min(self.vel_magnitude,self.max_vel)
+            #self.vel_magnitude += dir_y # slow down while turning?
+        elif dir_y > 0: # pressing the brake
+            self.vel_magnitude -= self.deccel
+            self.vel_magnitude = max(self.vel_magnitude,-self.max_vel)
+        else: # drifting with no accel or brake
+            self.vel_magnitude -= self.deccel/4
+            self.vel_magnitude = max(self.vel_magnitude,0)
+
+        self.move_angle = self.move_angle + dir_x*5
+        # self.move_angle = utilities.lerp(self.move_angle,self.desired_angle,.1)
+        self.move_angle = self.move_angle % 360
+        print(self.move_angle)
+
+        newX = self.x + pyxel.cos(self.move_angle)*self.vel_magnitude
+        newY = self.y + pyxel.sin(self.move_angle)*self.vel_magnitude
+
+        return [newX,newY]
+
+
     def move(self):
         # player movement logic  
         newX = self.x
@@ -121,8 +145,10 @@ class Player(moveable_obj.MoveableObj):
 
         if pyxel.btnp(pyxel.KEY_X) and self.boost <= 0:
             self.boost = self.top_boost
+            pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
         
         [newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
+        #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
 
         tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
         tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
@@ -144,6 +170,8 @@ class Player(moveable_obj.MoveableObj):
 
             # do stuff that only happens on first attack frame
             self.attack_wall_pushback()
+
+            pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
 
         
         # player attack
@@ -171,6 +199,9 @@ class Player(moveable_obj.MoveableObj):
                             [-dir_x*self.attack_object_force,
                             -dir_y*self.attack_object_force,
                             self.attack_object_cooldown])
+                        
+                        pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
+
 
     def attack_wall_pushback(self):
         # attack pushback
@@ -208,6 +239,8 @@ class Player(moveable_obj.MoveableObj):
             self.forces.append(
                 [self.wall_pushback_x,self.wall_pushback_y,
                 self.attack_knockback_cooldown])
+            pyxel.play(2, sound_lookup.player_attack_hit_wall)
+
 
     def box_collision_detect(self,x1,y1,w1,h1,x2,y2,w2,h2):
         if (x1 < x2 + w2 and
@@ -245,16 +278,16 @@ class Player(moveable_obj.MoveableObj):
             self.sprite = 0
             self.h_mod = 1
 
-        # TODO: account for camera position when drawing player
-
         pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
 
         # draw line showing movement for debugging
-        #pyxel.line(self.x*8, self.y*8,(self.x+pyxel.cos(self.move_angle)*(self.vel_magnitude+1))*8,(self.y+pyxel.sin(self.move_angle)*(self.vel_magnitude+1))*8, 3)
+        sx = self.x*8+4-self.levels.camera.x
+        sy = self.y*8+4-self.levels.camera.y
+        pyxel.line(sx,sy,sx+pyxel.cos(self.move_angle)*8,sy+pyxel.sin(self.move_angle)*8, 3)
         
         # draw attack wall push direction
-        sx = self.x*8+4
-        sy = self.y*8+4
+        sx = self.x*8+4-self.levels.camera.x
+        sy = self.y*8+4-self.levels.camera.y
         pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
 
 
@@ -262,8 +295,8 @@ class Player(moveable_obj.MoveableObj):
         if self.attack:
             [min_x,min_y,w,h] = self.get_attack_bounds()
 
-            pyxel.rect(min_x,
-                       min_y,
+            pyxel.rect(min_x-self.levels.camera.x,
+                       min_y-self.levels.camera.y,
                        w,
                        h,
                        12)
