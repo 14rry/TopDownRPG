@@ -53,7 +53,7 @@ class LevelHandler:
         self.camera.change_level(self.level_size,player_offset)
 
         # build list of active scenery, ai, etc. based on presence of certain special tiles
-        pyxel.load("topdown.pyxres",False,True,False,False) # TODO: this is a bad workaround for resetting tilemap after changing for scenery..
+        # pyxel.load("topdown.pyxres",False,True,False,False) # TODO: this is a bad workaround for resetting tilemap after changing for scenery..
 
         self.level_objs = []
         for i in range(self.level_size[0]):
@@ -136,7 +136,16 @@ class LevelHandler:
         return [x + (self.level_index[0]*self.screen_size),y + (self.level_index[1]*self.screen_size)]
 
     def draw(self):
+        # base layer
         pyxel.bltm(0,0,0,
+            self.camera.x+self.level_index[0]*self.screen_size*self.grid_size,
+            self.camera.y+self.level_index[1]*self.screen_size*self.grid_size,
+            self.grid_size*self.screen_size,
+            self.grid_size*self.screen_size,
+            15)
+
+        # second layer sprites w/ transparency i.e. coins
+        pyxel.bltm(0,0,1,
             self.camera.x+self.level_index[0]*self.screen_size*self.grid_size,
             self.camera.y+self.level_index[1]*self.screen_size*self.grid_size,
             self.grid_size*self.screen_size,

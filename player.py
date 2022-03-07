@@ -2,6 +2,7 @@ import pyxel
 import moveable_obj
 import utilities
 import sound_lookup
+import tile_lookup
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -10,6 +11,7 @@ class Player(moveable_obj.MoveableObj):
         # overwrite defaults on inherrited properties
         #
         self.health = 10
+        self.money = 0
 
         # movement properties
         self.accel = .02
@@ -147,8 +149,8 @@ class Player(moveable_obj.MoveableObj):
             self.boost = self.top_boost
             pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
         
-        #[newX,newY] = self.move_without_velocity(dir_x,dir_y)
-        [newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
+        [newX,newY] = self.move_without_velocity(dir_x,dir_y)
+        #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
         #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
 
         tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
@@ -242,6 +244,21 @@ class Player(moveable_obj.MoveableObj):
                 [self.wall_pushback_x,self.wall_pushback_y,
                 self.attack_knockback_cooldown])
             pyxel.play(2, sound_lookup.player_attack_hit_wall)
+
+    def check_collision(self, newX, newY):
+        # do checks that only apply to parent and not other moveable objects
+        [newX,newY] = super().check_collision(newX, newY)
+        roundX = round(newX)
+        roundY = round(newY)
+        tm_pos = self.levels.player_pos_to_tm(roundX,roundY)
+        tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
+        print(tm_val)
+        if tm_val == tile_lookup.coin: # coin
+            self.money += 1
+            pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
+            pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
+
+        return [newX,newY]
 
 
     def box_collision_detect(self,x1,y1,w1,h1,x2,y2,w2,h2):
