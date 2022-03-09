@@ -1,4 +1,6 @@
+
 import pyxel
+import sound_lookup
 
 class MoveableObj:
     def __init__(self,x,y,levels,sprite_index = (0,0)):
@@ -7,10 +9,15 @@ class MoveableObj:
         self.y = y
         self.levels = levels
 
+        self.attached_to = None
+
         self.level_start_x = self.x
         self.level_start_y = self.y
         
         self.health = 10
+
+        self.time_over_pit = 0
+        self.max_time_over_pit = 6
 
         # movement properties
         self.accel = .04
@@ -34,6 +41,13 @@ class MoveableObj:
 
         self.forces = [] # [xforce,yforce,cooldown]
 
+    def attach(self,attachment_obj):
+        self.attached_to = attachment_obj
+        self.offset = [attachment_obj.x - self.x, attachment_obj.y - self.y]
+
+    def dettach(self):
+        self.attached_to = None
+
     # step through list of external forces on object and move object accordingly
     def apply_forces(self,newX,newY,tm_val):
         for idx,vals in enumerate(self.forces):
@@ -54,10 +68,19 @@ class MoveableObj:
 
     # called from main.py on each moveable object in a level
     def update(self):
+        newX = self.x
+        newY = self.y
+        if self.attached_to != None:
+            newX = self.attached_to.x - self.offset[0]
+            newY = self.attached_to.y - self.offset[1]
+        #else:
         tm_val = self.get_tilemap_value()
 
-        [newX,newY] = self.apply_forces(self.x,self.y,tm_val)
-        [self.x,self.y] = self.check_collision(newX,newY)
+        [newX,newY] = self.apply_forces(newX,newY,tm_val)
+        [newX,newY] = self.check_collision(newX,newY)
+
+        self.x = newX
+        self.y = newY
 
     def zero_attack_forces_x(self):
         for idx,vals in enumerate(self.forces):
@@ -75,7 +98,8 @@ class MoveableObj:
     def check_collision(self,newX,newY):
 
         [newX,newY] = self.spike_collision(newX,newY)
-        [newX,newY] = self.wall_collision_check(newX,newY)
+        [newX,newY,tm_val] = self.wall_collision_check(newX,newY)
+        [newX,newY] = self.pit_collision_check(newX,newY,tm_val)
 
         return [newX,newY]
 
@@ -102,6 +126,18 @@ class MoveableObj:
 
         return [newX,newY]
 
+    def pit_collision_check(self,newX,newY,col_val):
+        if col_val == 3: # over pit
+            self.time_over_pit += 1
+            if self.time_over_pit > self.max_time_over_pit:
+                newX = self.level_start_x
+                newY = self.level_start_y
+                self.health -= 1
+                pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
+        else:
+            self.time_over_pit = 0
+
+        return [newX,newY]
 
     def wall_collision_check(self,newX,newY):
 
@@ -121,23 +157,25 @@ class MoveableObj:
         
         # collision on old y (allows sliding along walls)
         col_old_y = self.levels.check_tile_collision(roundX,roundOldY)
-        
-        if col_now == 0: # clear floor
+        final_col_val = col_now
+        if col_now == 0 or col_now == 3: # clear floor
             x_final = newX
             y_final = newY
-        elif col_old_x == 0:
+        elif col_old_x == 0 or col_old_x == 3:
             y_final = newY
             self.dir[0] = 0
             self.zero_attack_forces_x()
-        elif col_old_y == 0:
+            final_col_val = col_old_x
+        elif col_old_y == 0 or col_old_y == 3:
             x_final = newX
             self.dir[1] = 0
             self.zero_attack_forces_y()
+            final_col_val = col_old_y
         else:
             self.vel_y = 0
             self.vel_x = 0
 
-        return [x_final,y_final]
+        return [x_final,y_final,final_col_val]
     
     def get_tilemap_value(self):
         tm_pos = self.levels.player_pos_to_tm(round(self.x),round(self.y))

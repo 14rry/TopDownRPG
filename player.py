@@ -15,7 +15,7 @@ class Player(moveable_obj.MoveableObj):
 
         # movement properties
         self.accel = .02
-        self.deccel = .1
+        self.deccel = .01
         self.max_vel = .2
         self.vel_x = 0
         self.vel_y = 0
@@ -44,6 +44,9 @@ class Player(moveable_obj.MoveableObj):
         self.attack_object_cooldown = 5
         self.wall_pushback_x = 0
         self.wall_pushback_y = 0
+
+        # attract properties
+        self.attract = False
 
     def move_with_velocity(self,dir_x,dir_y,tm_val):
         # deacel logic
@@ -145,9 +148,9 @@ class Player(moveable_obj.MoveableObj):
             dir_x = self.dir[0]
             dir_y = self.dir[1]
 
-        if pyxel.btnp(pyxel.KEY_X) and self.boost <= 0:
-            self.boost = self.top_boost
-            pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
+        # if pyxel.btnp(pyxel.KEY_X) and self.boost <= 0:
+        #     self.boost = self.top_boost
+        #     pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
         
         [newX,newY] = self.move_without_velocity(dir_x,dir_y)
         #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
@@ -169,12 +172,34 @@ class Player(moveable_obj.MoveableObj):
     def process_attack(self):
         if not self.attack and pyxel.btnp(pyxel.KEY_Z):
             self.attack = True
+            if self.attract:
+                self.attract = False
+                for level_obj in self.levels.level_objs:
+                        level_obj.dettach()
             self.attackFrame = pyxel.frame_count
 
             # do stuff that only happens on first attack frame
             self.attack_wall_pushback()
 
             pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
+        elif pyxel.btnp(pyxel.KEY_X):
+            if self.attract == False: # first time on
+                self.attract = True
+                self.attack = False
+
+                # any object within range should follow player movement
+                # check scenery collision
+                [min_x,min_y,w,h] = self.get_attack_bounds()
+
+                for level_obj in self.levels.level_objs:
+                    if self.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
+                        level_obj.attach(self)
+                        print('attached')
+            else:
+                if self.attract:
+                    self.attract = False
+                    for level_obj in self.levels.level_objs:
+                        level_obj.dettach()
 
         
         # player attack
@@ -252,7 +277,6 @@ class Player(moveable_obj.MoveableObj):
         roundY = round(newY)
         tm_pos = self.levels.player_pos_to_tm(roundX,roundY)
         tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
-        print(tm_val)
         if tm_val == tile_lookup.coin: # coin
             self.money += 1
             pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
@@ -319,4 +343,13 @@ class Player(moveable_obj.MoveableObj):
                        w,
                        h,
                        12)
+
+        elif self.attract:
+            [min_x,min_y,w,h] = self.get_attack_bounds()
+
+            pyxel.rect(min_x-self.levels.camera.x,
+                       min_y-self.levels.camera.y,
+                       w,
+                       h,
+                       11)
 

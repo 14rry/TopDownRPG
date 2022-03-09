@@ -24,6 +24,19 @@ class LevelHandler:
         self.camera = camera.Camera(self.screen_size)
 
     def change_level(self,new_level,level_offset):
+        print('num objs:',len(self.level_objs))
+        new_lvl_objs = []
+        # delete any unattached scenery and write it back into the tilemap
+        for idx,lvl_obj in enumerate(self.level_objs):
+            print(lvl_obj.attached_to)
+            if lvl_obj.attached_to == None:
+                tm_pos = self.player_pos_to_tm(round(lvl_obj.x),round(lvl_obj.y))
+                pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],lvl_obj.sprite_index)
+            else:
+                new_lvl_objs.append(lvl_obj)
+                #print('bye:',tm_pos,lvl_obj.sprite_index)
+
+        self.level_objs = new_lvl_objs
 
         self.level_index = [self.level_index[0] + level_offset[0] + new_level[0], 
             self.level_index[1] + level_offset[1] + new_level[1]]
@@ -53,9 +66,6 @@ class LevelHandler:
         self.camera.change_level(self.level_size,player_offset)
 
         # build list of active scenery, ai, etc. based on presence of certain special tiles
-        # pyxel.load("topdown.pyxres",False,True,False,False) # TODO: this is a bad workaround for resetting tilemap after changing for scenery..
-
-        self.level_objs = []
         for i in range(self.level_size[0]):
             for j in range(self.level_size[1]):
                 tm_pos = self.player_pos_to_tm(i,j)
