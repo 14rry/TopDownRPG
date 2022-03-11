@@ -57,10 +57,7 @@ class MoveableObj:
 
             if tm_val != (3,0):
                 self.forces[idx][2] -= 1
-            # else:
-            #     print('space!')
-            #     print(self.forces[idx][2])
-
+            
             if self.forces[idx][2] <= -2 or (vals[0] == 0 and vals[1] == 0): # going down to -2 gives wiggle room for space
                 self.forces.pop(idx)
 
@@ -73,7 +70,7 @@ class MoveableObj:
         if self.attached_to != None:
             newX = self.attached_to.x - self.offset[0]
             newY = self.attached_to.y - self.offset[1]
-        #else:
+
         tm_val = self.get_tilemap_value()
 
         [newX,newY] = self.apply_forces(newX,newY,tm_val)
@@ -91,8 +88,6 @@ class MoveableObj:
             self.forces[idx][1] = 0
 
     def draw(self):
-        #pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
-
         pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y, 0, self.sprite_index[0]*8, self.sprite_index[1]*8,8,8,15)
 
     def check_collision(self,newX,newY):
@@ -130,6 +125,7 @@ class MoveableObj:
         if col_val == 3: # over pit
             self.time_over_pit += 1
             if self.time_over_pit > self.max_time_over_pit:
+                self.attached_to = None
                 newX = self.level_start_x
                 newY = self.level_start_y
                 self.health -= 1

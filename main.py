@@ -20,29 +20,22 @@ class App:
         self.playing_music = False
 
         pyxel.init(self.levelSize*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
-        
         pyxel.load("topdown.pyxres")
-
         self.startGame()
         
         pyxel.run(self.update, self.draw)
-
         
     def startGame(self):
         self.levels = levels.LevelHandler()
         self.player = player.Player(1,1,self.levels)
-        self.levels.level_index = [1,1] # starting level
+        self.levels.level_index = [7,0] # starting level
         
         #self.currentAI = levels.loadAI()
         
         self.dialogScreen = False
         self.dialogText = [""]
 
-        self.attack = False
-        self.attack_frame = 0
-
         #pyxel.playm(1,0,True)
-
 
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
@@ -70,11 +63,8 @@ class App:
         
         [newX,newY] = self.player.move()
 
-        roundX = self.round_player_pos(newX)
-        roundY = self.round_player_pos(newY)
-        
         # check if we need to change levels
-        [newX,newY,did_change] = self.levels.check_for_change(roundX,roundY,newX,newY)            
+        [newX,newY,did_change] = self.levels.check_for_change(round(newX),round(newY),newX,newY)            
         [newX,newY] = self.player.check_collision(newX,newY)
         self.player.x = newX
         self.player.y = newY
@@ -83,24 +73,22 @@ class App:
             self.player.level_start_x = newX
             self.player.level_start_y = newY
 
-        #print(newX,newY)
-
-        roundX = self.round_player_pos(newX)
-        roundY = self.round_player_pos(newY)
-        tm_pos = self.levels.player_pos_to_tm(roundX,roundY)
-        tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
-
+        # check if we need to run dialog
+        roundX = round(newX)
+        roundY = round(newY)
+        tm_val = self.player.get_tilemap_value()
+        
         if tm_val == (2,1): # npc
             self.dialogText = dialog.invoke(self.levels.level_index,roundX,roundY)
             self.dialogScreen =  True
 
+        # update non-player objects in the current level
         for level_obj in self.levels.level_objs:
             level_obj.update()
 
         self.levels.camera.update(self.player.x,self.player.y)
             
         self.player.process_attack()
-
         
     def draw(self):        
         pyxel.cls(6)
@@ -132,12 +120,5 @@ class App:
     def reset(self):
         self.levels.reset()
         self.startGame()
-
-    def round_player_pos(self,val):
-        return round(val)
-        if dir > 0:
-            return pyxel.ceil(val)
-        else:
-            return pyxel.floor(val)
         
 App()

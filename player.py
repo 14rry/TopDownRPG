@@ -97,7 +97,6 @@ class Player(moveable_obj.MoveableObj):
         if dir_y < 0: # car accelerating
             self.vel_magnitude += self.accel
             self.vel_magnitude = min(self.vel_magnitude,self.max_vel)
-            #self.vel_magnitude += dir_y # slow down while turning?
         elif dir_y > 0: # pressing the brake
             self.vel_magnitude -= self.deccel
             self.vel_magnitude = max(self.vel_magnitude,-self.max_vel)
@@ -106,7 +105,6 @@ class Player(moveable_obj.MoveableObj):
             self.vel_magnitude = max(self.vel_magnitude,0)
 
         self.move_angle = self.move_angle + dir_x*5
-        # self.move_angle = utilities.lerp(self.move_angle,self.desired_angle,.1)
         self.move_angle = self.move_angle % 360
         print(self.move_angle)
 
@@ -114,7 +112,6 @@ class Player(moveable_obj.MoveableObj):
         newY = self.y + pyxel.sin(self.move_angle)*self.vel_magnitude
 
         return [newX,newY]
-
 
     def move(self):
         # player movement logic  
@@ -125,8 +122,7 @@ class Player(moveable_obj.MoveableObj):
         dir_y = 0
 
         # don't allow change of direction in space
-        tm_pos = self.levels.player_pos_to_tm(round(self.x),round(self.y))
-        tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+        tm_val = self.get_tilemap_value()
 
         if tm_val != (3,0):
             if pyxel.btn(pyxel.KEY_RIGHT):
@@ -137,13 +133,14 @@ class Player(moveable_obj.MoveableObj):
                 dir_y -= 1
             if pyxel.btn(pyxel.KEY_DOWN):
                 dir_y += 1
-            
-            self.dir = [dir_x,dir_y]
 
             # account for faster diagonals
             if (dir_y != 0 and dir_x != 0):
                 dir_y *= .7
                 dir_x *= .7
+
+            self.dir = [dir_x,dir_y]
+
         else:
             dir_x = self.dir[0]
             dir_y = self.dir[1]
@@ -156,8 +153,7 @@ class Player(moveable_obj.MoveableObj):
         #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
         #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
 
-        tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
-        tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+        tm_val = self.get_tilemap_value()
 
         [newX,newY] = self.apply_forces(newX,newY,tm_val)
 
@@ -230,7 +226,6 @@ class Player(moveable_obj.MoveableObj):
                         
                         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
 
-
     def attack_wall_pushback(self):
         # attack pushback
         [min_x,min_y,w,h] = self.get_attack_bounds()
@@ -273,17 +268,16 @@ class Player(moveable_obj.MoveableObj):
     def check_collision(self, newX, newY):
         # do checks that only apply to parent and not other moveable objects
         [newX,newY] = super().check_collision(newX, newY)
-        roundX = round(newX)
-        roundY = round(newY)
-        tm_pos = self.levels.player_pos_to_tm(roundX,roundY)
+
+        tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
         tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
+
         if tm_val == tile_lookup.coin: # coin
             self.money += 1
             pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
             pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
 
         return [newX,newY]
-
 
     def box_collision_detect(self,x1,y1,w1,h1,x2,y2,w2,h2):
         if (x1 < x2 + w2 and
@@ -332,7 +326,6 @@ class Player(moveable_obj.MoveableObj):
         sx = self.x*8+4-self.levels.camera.x
         sy = self.y*8+4-self.levels.camera.y
         pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
-
 
     def draw_attack(self):
         if self.attack:
