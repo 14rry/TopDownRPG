@@ -87,7 +87,7 @@ class App:
 
         self.levels.camera.update(self.player.x,self.player.y)
             
-        self.player.process_attack()
+        self.player.update()
         
     def draw(self):        
         pyxel.cls(6)

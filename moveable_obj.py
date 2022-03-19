@@ -15,6 +15,7 @@ class MoveableObj:
         self.level_start_y = self.y
         
         self.health = 10
+        self.alive = True
 
         self.time_over_pit = 0
         self.max_time_over_pit = 6
@@ -88,7 +89,13 @@ class MoveableObj:
             self.forces[idx][1] = 0
 
     def draw(self):
-        pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y, 0, self.sprite_index[0]*8, self.sprite_index[1]*8,8,8,15)
+        pyxel.blt(
+            self.x*8-self.levels.camera.x,
+            self.y*8-self.levels.camera.y, 
+            0, 
+            self.sprite_index[0]*8,
+            self.sprite_index[1]*8,
+            8,8,15)
 
     def check_collision(self,newX,newY):
 
@@ -99,7 +106,6 @@ class MoveableObj:
         return [newX,newY]
 
     def spike_collision(self,newX,newY):
-       
         # check collision on current position
         # check each edge
         col_now = 0

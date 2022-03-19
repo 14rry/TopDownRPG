@@ -4,6 +4,7 @@ import utilities
 import sound_lookup
 import tile_lookup
 import ai
+from enum import Enum
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -40,7 +41,7 @@ class Player(moveable_obj.MoveableObj):
         #
 
         # attack properties
-        self.attack = False
+        #self.attack = False
         self.attack_frame = 0
         self.attack_cooldown = 14
         self.attack_knockback_force = .5 # knockback from wall
@@ -51,8 +52,19 @@ class Player(moveable_obj.MoveableObj):
         self.wall_pushback_y = 0
         self.attack_damage = 1 # amount of health subtracted from enemy on attack collision (each frame)
 
+        self.z_press = False
         # attract properties
-        self.attract = False
+        #self.attract = False
+
+        self.aim_move_penalty = 0.05
+        self.aim_debounce_max = 6 # z key must be held down for 5 frames to enter aim state
+        self.aim_debounce = 0 
+
+        self.attach_debounce_max = 6
+        self.attach_debounce = 0 # allow player to 'move into' scenery objects and attach
+                                # kind of like coyote jump time
+
+        self.state = PlayerState.NORMAL
 
     def move_with_velocity(self,dir_x,dir_y,tm_val):
         # deacel logic
@@ -154,6 +166,10 @@ class Player(moveable_obj.MoveableObj):
         if pyxel.btnp(pyxel.KEY_C) and self.boost <= 0:
             self.boost = self.top_boost
             pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
+
+        if self.state == PlayerState.AIMING:
+            dir_x = dir_x * self.aim_move_penalty
+            dir_y = dir_y * self.aim_move_penalty
         
         [newX,newY] = self.move_without_velocity(dir_x,dir_y)
         #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
@@ -238,29 +254,87 @@ class Player(moveable_obj.MoveableObj):
         sy = self.y*8+4-self.levels.camera.y
         pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
 
-
     ##############################################################################
     # ATTACK FUNCTIONS
     ##############################################################################
 
+    def update(self):
+        if self.state == PlayerState.ATTACKING:
+            self.process_attack()
+
+        # continue allow objects to attach during first few frames of attach state
+        # similar to coyote time for 2d platformers
+        if self.state == PlayerState.ATTACHING and self.attach_debounce < self.attach_debounce_max:
+            self.attach_debounce += 1
+            self.attract_objects()
+
+        if pyxel.btn(pyxel.KEY_Z):
+            if self.state == PlayerState.ATTACHING:
+                self.state = PlayerState.AIM_DEBOUNCING
+                self.aim_debounce = 0
+            elif self.state == PlayerState.AIM_DEBOUNCING:
+                self.aim_debounce += 1
+                if self.aim_debounce > self.aim_debounce_max:
+                    self.state = PlayerState.AIMING
+            elif self.state == PlayerState.AIMING:
+                self.process_aiming()
+            elif not self.state == PlayerState.ATTACKING and self.z_press == False:
+                self.z_press = True
+                self.process_first_attack_frame()
+        else:
+            self.z_press = False
+            if self.state == PlayerState.AIMING or self.state == PlayerState.AIM_DEBOUNCING:
+                # deattach everything
+                for level_obj in self.levels.level_objs:
+                        level_obj.dettach()
+                if self.state == PlayerState.AIMING:
+                    self.process_aim_release()
+                else:
+                    self.process_first_attack_frame()
+
+        if pyxel.btnp(pyxel.KEY_X):
+            if not self.state == PlayerState.ATTACHING: # first time on
+                self.state = PlayerState.ATTACHING
+                self.attach_debounce = 0
+                self.attract_objects()
+            else:
+                self.de_attract_objects()
+                self.state = PlayerState.NORMAL
+
+    def process_aiming(self):
+        dummy = 1
+
+    def process_aim_release(self):
+        # apply force to all objects in direction of player movement
+        self.attack_scenery_collision(dir = self.dir)
+        self.state = PlayerState.NORMAL
+
     def draw_attack(self):
-        if self.attack:
+        attack_color = -1
+        if self.state == PlayerState.ATTACKING: #self.attack:
+            attack_color = 12
+        elif self.state == PlayerState.ATTACHING:
+            if self.attach_debounce < self.attach_debounce_max:
+                attack_color = 13
+            else:
+                attack_color = 11
+        elif self.state == PlayerState.AIMING:
+            attack_color = 10
+
+        if attack_color >= 0:
             [min_x,min_y,w,h] = self.get_attack_bounds()
 
             pyxel.rect(min_x-self.levels.camera.x,
                        min_y-self.levels.camera.y,
                        w,
                        h,
-                       12)
+                       attack_color)
 
-        elif self.attract:
-            [min_x,min_y,w,h] = self.get_attack_bounds()
-
-            pyxel.rect(min_x-self.levels.camera.x,
-                       min_y-self.levels.camera.y,
-                       w,
-                       h,
-                       11)
+        if self.state == PlayerState.AIMING:
+            # draw aim line (has to be drawn after the rectangle)
+            sx = self.x*8+4-self.levels.camera.x
+            sy = self.y*8+4-self.levels.camera.y
+            pyxel.line(sx,sy,sx+self.dir[0]*16,sy+self.dir[1]*16, 3)
 
     def get_attack_bounds(self):
         min_x = 8*(self.x-1)
@@ -270,57 +344,44 @@ class Player(moveable_obj.MoveableObj):
 
         return [min_x,min_y,w,h]
 
+    def process_first_attack_frame(self):
+        self.state = PlayerState.ATTACKING
+        self.attackFrame = pyxel.frame_count # used for cooldown
+
+        # do stuff that only happens on first attack frame
+        self.attack_wall_pushback()
+        pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
+
     def process_attack(self):
-        if not self.attack and pyxel.btnp(pyxel.KEY_Z):
-            self.attack = True
-            if self.attract:
-                self.attract = False
-                for level_obj in self.levels.level_objs:
-                        level_obj.dettach()
-            self.attackFrame = pyxel.frame_count
+        if pyxel.frame_count - self.attackFrame > self.attack_cooldown:
+            self.state = PlayerState.NORMAL
+        else: # attack not finished, do stuff that happens on every attack frame
+            # check scenery and AI collision
+            self.attack_scenery_collision()
 
-            # do stuff that only happens on first attack frame
-            self.attack_wall_pushback()
-            pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
-
-        elif pyxel.btnp(pyxel.KEY_X):
-            if self.attract == False: # first time on
-                self.attract = True
-                self.attack = False
-
-                self.attract_objects()
-
-            else:
-                if self.attract:
-                    self.attract = False
-                    self.de_attract_objects()
-
-        # player attack
-        if self.attack: # attack still alive from a previous frame
-            if pyxel.frame_count - self.attackFrame > self.attack_cooldown:
-                self.attack = False
-            else: # attack not finished, do stuff that happens on every attack frame
-
-                # check scenery and AI collision
-                self.attack_scenery_collision()
-
-    def attack_scenery_collision(self):
+    def attack_scenery_collision(self,dir = None):
         [min_x,min_y,w,h] = self.get_attack_bounds()
         for level_obj in self.levels.level_objs:
-            if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-                level_obj.health -= self.attack_damage
-                
-                # calculate angle between player and object and apply force in that direction
-                angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
-                dir_x = pyxel.cos(angle)
-                dir_y = pyxel.sin(angle)
+            if level_obj.alive == True:
+                if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
+                    level_obj.health -= self.attack_damage
+                    
+                    if dir is None:
+                        # calculate angle between player and object and apply force in that direction
+                        angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
+                        dir_x = pyxel.cos(angle)
+                        dir_y = pyxel.sin(angle)
+                    else:
+                        dir_x = -dir[0]/self.aim_move_penalty
+                        dir_y = -dir[1]/self.aim_move_penalty
 
-                level_obj.forces.append(
-                    [-dir_x*self.attack_object_force,
-                    -dir_y*self.attack_object_force,
-                    self.attack_object_cooldown])
-                
-                pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
+                    level_obj.forces.append(
+                        [-dir_x*self.attack_object_force,
+                        -dir_y*self.attack_object_force,
+                        self.attack_object_cooldown])
+                    
+                    if not (dir_x == 0 and dir_y == 0): # don't play sound if player let go of aim direction
+                        pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
 
     def attack_wall_pushback(self):
         # attack pushback
@@ -374,4 +435,13 @@ class Player(moveable_obj.MoveableObj):
     def de_attract_objects(self):
         for level_obj in self.levels.level_objs:
             level_obj.dettach()
+
+class PlayerState(Enum):
+    NORMAL = 1
+    ATTACKING = 2
+    ATTACHING = 3
+    AIMING = 4
+    AIM_DEBOUNCING = 5
+
+
 
