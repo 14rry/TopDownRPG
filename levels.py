@@ -5,8 +5,8 @@ import moveable_obj
 import camera
 
 class LevelHandler:
-    def __init__(self):
-        self.level_index = [1,1] # controls starting level
+    def __init__(self,lvl_idx=[1,1]):
+        self.level_index = lvl_idx # controls starting level
         self.level_size = [16,16]
         self.screen_size = 16
         self.grid_size = 8
@@ -20,14 +20,14 @@ class LevelHandler:
         self.max_y = 1
 
         self.level_objs = []
+        self.update_level_objs()
 
         self.camera = camera.Camera(self.screen_size)
 
-    def change_level(self,new_level,level_offset):
-        print('num objs:',len(self.level_objs))
+    def clean_up_scenery(self):
         new_lvl_objs = []
         # delete any unattached scenery and write it back into the tilemap
-        for idx,lvl_obj in enumerate(self.level_objs):
+        for lvl_obj in self.level_objs:
             print(lvl_obj.attached_to)
             if lvl_obj.attached_to == None:
                 tm_pos = self.player_pos_to_tm(round(lvl_obj.x),round(lvl_obj.y))
@@ -36,7 +36,10 @@ class LevelHandler:
                 new_lvl_objs.append(lvl_obj)
                 #print('bye:',tm_pos,lvl_obj.sprite_index)
 
-        self.level_objs = new_lvl_objs
+        return new_lvl_objs
+
+    def change_level(self,new_level,level_offset):
+        self.level_objs = self.clean_up_scenery()
 
         self.level_index = [self.level_index[0] + level_offset[0] + new_level[0], 
             self.level_index[1] + level_offset[1] + new_level[1]]
@@ -64,29 +67,28 @@ class LevelHandler:
         print("level:",self.level_index)
 
         self.camera.change_level(self.level_size,player_offset)
-
-        # build list of active scenery, ai, etc. based on presence of certain special tiles
-        for i in range(self.level_size[0]):
-            for j in range(self.level_size[1]):
-                tm_pos = self.player_pos_to_tm(i,j)
-                tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
-                if tm_val == tile_lookup.ball_tm_index:
-                    self.level_objs.append(moveable_obj.MoveableObj(i,j,self,tm_val))
-                    # replace ball tile with floor
-                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
+        self.update_level_objs()
             
         return player_offset
 
     # def loadAI():
     #     return level_ai[levelIndex[0],levelIndex[1]]
         #return level1_ai
-    
-    def reset(self):
-        self.level_index = [1,1]
-        # level1_ai = [ai.ai(), ai.ai(10,10)]
 
-        # self.level_ai = np.array([[emptyAI,emptyAI,emptyAI,emptyAI],
-        #                  [level1_ai,emptyAI,emptyAI,emptyAI]])
+    def update_level_objs(self):
+        # build list of active scenery, ai, etc. based on presence of certain special tiles
+        for i in range(self.level_size[0]):
+            for j in range(self.level_size[1]):
+                tm_pos = self.player_pos_to_tm(i,j)
+                tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+                if tm_val == tile_lookup.ball:
+                    self.level_objs.append(moveable_obj.MoveableObj(i,j,self,tm_val))
+                    # replace ball tile with floor
+                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
+                elif tm_val == tile_lookup.ai:
+                    print('hi')
+                    self.level_objs.append(ai.Ai(i,j,self,tm_val))
+                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
 
     def check_for_change(self,roundX,roundY,newX,newY):
         level_did_change = False

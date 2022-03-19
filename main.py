@@ -26,9 +26,8 @@ class App:
         pyxel.run(self.update, self.draw)
         
     def startGame(self):
-        self.levels = levels.LevelHandler()
+        self.levels = levels.LevelHandler([0,1])
         self.player = player.Player(1,1,self.levels)
-        self.levels.level_index = [7,0] # starting level
         
         #self.currentAI = levels.loadAI()
         
@@ -114,11 +113,13 @@ class App:
             val.draw()
                 
         # draw health bar
-        xHealth = (self.levelSize - 2*(self.grid_size - self.player.health))*self.grid_size
+        xHealth = self.player.health*self.grid_size*self.levelSize/10
         pyxel.rect(0,self.levelSize*self.grid_size,xHealth,9,8)
+
+        pyxel.text(0,self.levelSize*self.grid_size,str(self.player.health),3)
    
     def reset(self):
-        self.levels.reset()
+        self.levels.clean_up_scenery()
         self.startGame()
         
 App()

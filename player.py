@@ -3,6 +3,7 @@ import moveable_obj
 import utilities
 import sound_lookup
 import tile_lookup
+import ai
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -11,6 +12,10 @@ class Player(moveable_obj.MoveableObj):
         # overwrite defaults on inherrited properties
         #
         self.health = 10
+        self.ai_damage = 1 # amount of damage ai inflicts on player collision
+        self.ai_pushback = .7
+        self.invuln_frames = 0
+        self.max_invuln_frames = 20
         self.money = 0
 
         # movement properties
@@ -44,6 +49,7 @@ class Player(moveable_obj.MoveableObj):
         self.attack_object_cooldown = 5
         self.wall_pushback_x = 0
         self.wall_pushback_y = 0
+        self.attack_damage = 1 # amount of health subtracted from enemy on attack collision (each frame)
 
         # attract properties
         self.attract = False
@@ -145,9 +151,9 @@ class Player(moveable_obj.MoveableObj):
             dir_x = self.dir[0]
             dir_y = self.dir[1]
 
-        # if pyxel.btnp(pyxel.KEY_X) and self.boost <= 0:
-        #     self.boost = self.top_boost
-        #     pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
+        if pyxel.btnp(pyxel.KEY_C) and self.boost <= 0:
+            self.boost = self.top_boost
+            pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
         
         [newX,newY] = self.move_without_velocity(dir_x,dir_y)
         #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
@@ -165,6 +171,105 @@ class Player(moveable_obj.MoveableObj):
         return [newX,newY]
         #return self.move_without_velocity(dir_x,dir_y)
 
+    def check_collision(self, newX, newY):
+        # general moveable objects collision check (spikes, walls, pits)
+        [newX,newY] = super().check_collision(newX, newY)
+
+        # other collision checks that only apply to the player (coins)
+        tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
+        tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
+
+        if tm_val == tile_lookup.coin: # coin
+            self.money += 1
+            pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
+            pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
+
+        # ai collisions
+        if self.invuln_frames <= 0:
+            for level_obj in self.levels.level_objs:
+                if isinstance(level_obj,ai.Ai) and level_obj.alive:
+                    if utilities.box_collision_detect(self.x*8,self.y*8,8,8,level_obj.x*8,level_obj.y*8,8,8) == True:
+                        self.health -= self.ai_damage
+                        self.invuln_frames = self.max_invuln_frames
+
+                        # player knockback
+                        angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
+                        dir_x = pyxel.cos(angle)
+                        dir_y = pyxel.sin(angle)
+
+                        self.forces.append(
+                            [dir_x*self.ai_pushback,
+                            dir_y*self.ai_pushback,
+                            self.attack_object_cooldown])
+        else:
+            self.invuln_frames -= 1
+
+        return [newX,newY]
+
+    def draw(self):
+        self.draw_attack()
+
+        # selects the up/down sprite and sets direction
+        if self.dir[1] == 1:
+            self.w_mod = 1
+            self.sprite = 8
+        elif self.dir[1] == -1:
+            self.w_mod = -1
+            self.sprite = 8
+
+        # selects the left/right sprite and sets direction
+        if self.dir[0] == 1:
+            self.sprite = 0
+            self.h_mod = -1
+        elif self.dir[0] == -1:
+            self.sprite = 0
+            self.h_mod = 1
+
+        if self.invuln_frames % 2 == 0: # flash on hit
+            pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
+
+        # draw line showing movement for debugging
+        sx = self.x*8+4-self.levels.camera.x
+        sy = self.y*8+4-self.levels.camera.y
+        pyxel.line(sx,sy,sx+pyxel.cos(self.move_angle)*8,sy+pyxel.sin(self.move_angle)*8, 3)
+        
+        # draw attack wall push direction
+        sx = self.x*8+4-self.levels.camera.x
+        sy = self.y*8+4-self.levels.camera.y
+        pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
+
+
+    ##############################################################################
+    # ATTACK FUNCTIONS
+    ##############################################################################
+
+    def draw_attack(self):
+        if self.attack:
+            [min_x,min_y,w,h] = self.get_attack_bounds()
+
+            pyxel.rect(min_x-self.levels.camera.x,
+                       min_y-self.levels.camera.y,
+                       w,
+                       h,
+                       12)
+
+        elif self.attract:
+            [min_x,min_y,w,h] = self.get_attack_bounds()
+
+            pyxel.rect(min_x-self.levels.camera.x,
+                       min_y-self.levels.camera.y,
+                       w,
+                       h,
+                       11)
+
+    def get_attack_bounds(self):
+        min_x = 8*(self.x-1)
+        min_y = 8*(self.y-1)
+        w = 8*3
+        h = 8*3
+
+        return [min_x,min_y,w,h]
+
     def process_attack(self):
         if not self.attack and pyxel.btnp(pyxel.KEY_Z):
             self.attack = True
@@ -176,55 +281,46 @@ class Player(moveable_obj.MoveableObj):
 
             # do stuff that only happens on first attack frame
             self.attack_wall_pushback()
-
             pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
+
         elif pyxel.btnp(pyxel.KEY_X):
             if self.attract == False: # first time on
                 self.attract = True
                 self.attack = False
 
-                # any object within range should follow player movement
-                # check scenery collision
-                [min_x,min_y,w,h] = self.get_attack_bounds()
+                self.attract_objects()
 
-                for level_obj in self.levels.level_objs:
-                    if self.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-                        level_obj.attach(self)
-                        print('attached')
             else:
                 if self.attract:
                     self.attract = False
-                    for level_obj in self.levels.level_objs:
-                        level_obj.dettach()
+                    self.de_attract_objects()
 
-        
         # player attack
         if self.attack: # attack still alive from a previous frame
             if pyxel.frame_count - self.attackFrame > self.attack_cooldown:
                 self.attack = False
             else: # attack not finished, do stuff that happens on every attack frame
 
-                # enemy collisions
-                # for baddy in self.currentAI:
-                #     if baddy.alive:
-                #         baddy.checkCollision(roundX,roundY)
+                # check scenery and AI collision
+                self.attack_scenery_collision()
 
-                # check scenery collision
-                [min_x,min_y,w,h] = self.get_attack_bounds()
+    def attack_scenery_collision(self):
+        [min_x,min_y,w,h] = self.get_attack_bounds()
+        for level_obj in self.levels.level_objs:
+            if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
+                level_obj.health -= self.attack_damage
+                
+                # calculate angle between player and object and apply force in that direction
+                angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
+                dir_x = pyxel.cos(angle)
+                dir_y = pyxel.sin(angle)
 
-                for level_obj in self.levels.level_objs:
-                    if self.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-                        # calculate angle between player and object and apply force in that direction
-                        angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
-                        dir_x = pyxel.cos(angle)
-                        dir_y = pyxel.sin(angle)
-
-                        level_obj.forces.append(
-                            [-dir_x*self.attack_object_force,
-                            -dir_y*self.attack_object_force,
-                            self.attack_object_cooldown])
-                        
-                        pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
+                level_obj.forces.append(
+                    [-dir_x*self.attack_object_force,
+                    -dir_y*self.attack_object_force,
+                    self.attack_object_cooldown])
+                
+                pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
 
     def attack_wall_pushback(self):
         # attack pushback
@@ -265,84 +361,17 @@ class Player(moveable_obj.MoveableObj):
                 self.attack_knockback_cooldown])
             pyxel.play(2, sound_lookup.player_attack_hit_wall)
 
-    def check_collision(self, newX, newY):
-        # do checks that only apply to parent and not other moveable objects
-        [newX,newY] = super().check_collision(newX, newY)
+    def attract_objects(self):
+        # any object within range should follow player movement
+        # check scenery collision
+        [min_x,min_y,w,h] = self.get_attack_bounds()
 
-        tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
-        tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
+        for level_obj in self.levels.level_objs:
+            if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
+                level_obj.attach(self)
+                print('attached')
 
-        if tm_val == tile_lookup.coin: # coin
-            self.money += 1
-            pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
-            pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
-
-        return [newX,newY]
-
-    def box_collision_detect(self,x1,y1,w1,h1,x2,y2,w2,h2):
-        if (x1 < x2 + w2 and
-            x1 + w1 > x2 and
-            y1 < y2 + h2 and
-            h1 + y1 > y2):
-            return True
-        else:
-            return False
-
-    def get_attack_bounds(self):
-        min_x = 8*(self.x-1)
-        min_y = 8*(self.y-1)
-        w = 8*3
-        h = 8*3
-
-        return [min_x,min_y,w,h]        
-
-    def draw(self):
-        self.draw_attack()
-
-        # selects the up/down sprite and sets direction
-        if self.dir[1] == 1:
-            self.w_mod = 1
-            self.sprite = 8
-        elif self.dir[1] == -1:
-            self.w_mod = -1
-            self.sprite = 8
-
-        # selects the left/right sprite and sets direction
-        if self.dir[0] == 1:
-            self.sprite = 0
-            self.h_mod = -1
-        elif self.dir[0] == -1:
-            self.sprite = 0
-            self.h_mod = 1
-
-        pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
-
-        # draw line showing movement for debugging
-        sx = self.x*8+4-self.levels.camera.x
-        sy = self.y*8+4-self.levels.camera.y
-        pyxel.line(sx,sy,sx+pyxel.cos(self.move_angle)*8,sy+pyxel.sin(self.move_angle)*8, 3)
-        
-        # draw attack wall push direction
-        sx = self.x*8+4-self.levels.camera.x
-        sy = self.y*8+4-self.levels.camera.y
-        pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
-
-    def draw_attack(self):
-        if self.attack:
-            [min_x,min_y,w,h] = self.get_attack_bounds()
-
-            pyxel.rect(min_x-self.levels.camera.x,
-                       min_y-self.levels.camera.y,
-                       w,
-                       h,
-                       12)
-
-        elif self.attract:
-            [min_x,min_y,w,h] = self.get_attack_bounds()
-
-            pyxel.rect(min_x-self.levels.camera.x,
-                       min_y-self.levels.camera.y,
-                       w,
-                       h,
-                       11)
+    def de_attract_objects(self):
+        for level_obj in self.levels.level_objs:
+            level_obj.dettach()
 

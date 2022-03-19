@@ -30,7 +30,8 @@ has_dialog = [
 ]
 
 # special scenery object tiles
-ball_tm_index = (3,4)
+ball = (3,4)
+ai = (3,6)
 
 # other special tiles
 wall_highlight = (2,7)
