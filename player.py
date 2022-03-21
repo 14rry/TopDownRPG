@@ -14,24 +14,27 @@ class Player(moveable_obj.MoveableObj):
         #
         self.health = 10
         self.ai_damage = 1 # amount of damage ai inflicts on player collision
-        self.ai_pushback = .7
+        self.ai_pushback = .2
         self.invuln_frames = 0
         self.max_invuln_frames = 20
         self.money = 0
 
         # movement properties
-        self.accel = .02
-        self.deccel = .01
+        self.accel = .025
+        #self.deccel = .025
+        self.deccel = .2
         self.max_vel = .2
-        self.vel_x = 0
-        self.vel_y = 0
+        self.min_vel = .08
+        self.move_vel_x = 0
+        self.move_vel_y = 0
         self.dir = [0,0]
+        self.last_nonzero_dir = [0,0]
         self.vel_magnitude = 0
         self.move_angle = 0
         self.desired_angle = 0
 
         # for non-velocity movement
-        self.speed = .2
+        self.speed = .15
         self.top_boost = .5
         self.boost = 0
         self.boost_decay = .1
@@ -44,7 +47,7 @@ class Player(moveable_obj.MoveableObj):
         #self.attack = False
         self.attack_frame = 0
         self.attack_cooldown = 14
-        self.attack_knockback_force = .5 # knockback from wall
+        self.attack_knockback_force = .2 # knockback from wall
         self.attack_knockback_cooldown = 5
         self.attack_object_force = .1 # force against moveable_obj
         self.attack_object_cooldown = 5
@@ -56,51 +59,60 @@ class Player(moveable_obj.MoveableObj):
         # attract properties
         #self.attract = False
 
-        self.aim_move_penalty = 0.05
+        self.aim_move_penalty = 0.08
         self.aim_debounce_max = 6 # z key must be held down for 5 frames to enter aim state
         self.aim_debounce = 0 
+        self.aim_vel_multiplier = 3 # how hard the objects are flung away when aiming
 
+        self.any_attached = False
         self.attach_debounce_max = 6
         self.attach_debounce = 0 # allow player to 'move into' scenery objects and attach
                                 # kind of like coyote jump time
 
         self.state = PlayerState.NORMAL
 
+        self.grapple_dir = [0,0]
+        self.grapple_mag = 0
+        self.grapple_init_mag = 1
+        self.grapple_deccel = 0.01
+
+
     def move_with_velocity(self,dir_x,dir_y,tm_val):
         # deacel logic
         if tm_val != (3,0):
             if dir_y == 0:
-                if abs(self.vel_y) < .1:
-                    self.vel_y = 0
+                if abs(self.move_vel_y) < self.min_vel:
+                    self.move_vel_y = 0
                 else:
-                    self.vel_y -= self.deccel*pyxel.sgn(self.vel_y)
+                    self.move_vel_y -= self.deccel*pyxel.sgn(self.move_vel_y)
 
             if dir_x == 0:
-                if abs(self.vel_x) < .1:
-                    self.vel_x = 0
+                if abs(self.move_vel_x) < self.min_vel:
+                    self.move_vel_x = 0
                 else:
-                    self.vel_x -= self.deccel*pyxel.sgn(self.vel_x)
+                    self.move_vel_x -= self.deccel*pyxel.sgn(self.move_vel_x)
 
-            self.vel_x += dir_x * self.accel
-            self.vel_y += dir_y * self.accel
+            self.move_vel_x += dir_x * self.accel
+            self.move_vel_y += dir_y * self.accel
 
-            self.vel_x = max(min(self.vel_x,self.max_vel),-self.max_vel)
-            self.vel_y = max(min(self.vel_y,self.max_vel),-self.max_vel)
+            self.move_vel_x = max(min(self.move_vel_x,self.max_vel),-self.max_vel)
+            self.move_vel_y = max(min(self.move_vel_y,self.max_vel),-self.max_vel)
 
-            self.vel_x += dir_x * self.boost
-            self.vel_y += dir_y * self.boost
+            # boost
+            # self.vel_x += dir_x * self.boost
+            # self.vel_y += dir_y * self.boost
 
             if dir_x != 0 and dir_y != 0:
-                self.vel_x *= .88
-                self.vel_y *= .88 # this value depends on max vel... not sure the true math behind this
+                self.move_vel_x *= .895
+                self.move_vel_y *= .895 # this value depends on max vel... not sure the true math behind this
                 # find the value by printing the magnitude (below) and moving diagonal
                 # fine tune the value until the diagonal max magnitude is the same as non-diagonal
 
         # debug print magnitude
-        #print(pyxel.sqrt(self.vel_x*self.vel_x+self.vel_y*self.vel_y))
+        #print(pyxel.sqrt(self.move_vel_x*self.move_vel_x+self.move_vel_y*self.move_vel_y))
 
-        newX = self.x + self.vel_x
-        newY = self.y + self.vel_y
+        newX = self.x + self.move_vel_x
+        newY = self.y + self.move_vel_y
 
         return [newX,newY]
 
@@ -108,6 +120,16 @@ class Player(moveable_obj.MoveableObj):
         
         newX = self.x + (dir_x*(self.speed+self.boost))
         newY = self.y + (dir_y*(self.speed+self.boost))
+
+        return [newX,newY]
+
+    def grapple_movement(self,dir_x,dir_y):
+        angle = pyxel.atan2(self.grapple_dir[1],self.grapple_dir[0])
+        newX = self.x + (self.grapple_mag*pyxel.cos(angle))
+        newY = self.y + (self.grapple_mag*pyxel.sin(angle))
+
+        print(self.grapple_mag)
+
 
         return [newX,newY]
 
@@ -158,6 +180,8 @@ class Player(moveable_obj.MoveableObj):
                 dir_x *= .7
 
             self.dir = [dir_x,dir_y]
+            if not (dir_x == 0 and dir_y == 0):
+                self.last_nonzero_dir = self.dir
 
         else:
             dir_x = self.dir[0]
@@ -165,19 +189,23 @@ class Player(moveable_obj.MoveableObj):
 
         if pyxel.btnp(pyxel.KEY_C) and self.boost <= 0:
             self.boost = self.top_boost
+            self.grapple_dir = self.last_nonzero_dir
+            self.grapple_mag = self.grapple_init_mag
             pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
 
         if self.state == PlayerState.AIMING:
             dir_x = dir_x * self.aim_move_penalty
             dir_y = dir_y * self.aim_move_penalty
         
-        [newX,newY] = self.move_without_velocity(dir_x,dir_y)
-        #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
-        #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
+        if self.grapple_mag != 0:
+            [newX,newY] = self.grapple_movement(dir_x,dir_y)
+        else:
+            [newX,newY] = self.move_without_velocity(dir_x,dir_y)
+            #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
+            #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
 
         tm_val = self.get_tilemap_value()
-
-        [newX,newY] = self.apply_forces(newX,newY,tm_val)
+        [newX,newY] = self.apply_forces_with_velocity(newX,newY,tm_val)
 
         if self.boost > 0:
             self.boost -= self.boost_decay
@@ -189,7 +217,14 @@ class Player(moveable_obj.MoveableObj):
 
     def check_collision(self, newX, newY):
         # general moveable objects collision check (spikes, walls, pits)
-        [newX,newY] = super().check_collision(newX, newY)
+        [newX2,newY2] = super().check_collision(newX, newY)
+
+        if (newX2 != newX) or (newY2 != newY): # collided
+            self.grapple_mag = 0
+            print('collision')
+
+        newX = newX2
+        newY = newY2
 
         # other collision checks that only apply to the player (coins)
         tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
@@ -217,6 +252,7 @@ class Player(moveable_obj.MoveableObj):
                             [dir_x*self.ai_pushback,
                             dir_y*self.ai_pushback,
                             self.attack_object_cooldown])
+                
         else:
             self.invuln_frames -= 1
 
@@ -264,9 +300,12 @@ class Player(moveable_obj.MoveableObj):
 
         # continue allow objects to attach during first few frames of attach state
         # similar to coyote time for 2d platformers
-        if self.state == PlayerState.ATTACHING and self.attach_debounce < self.attach_debounce_max:
-            self.attach_debounce += 1
-            self.attract_objects()
+        if self.state == PlayerState.ATTACHING:
+            if self.attach_debounce < self.attach_debounce_max:
+                self.attach_debounce += 1
+                self.attract_objects()
+            elif self.any_attached == False:
+                self.state = PlayerState.NORMAL
 
         if pyxel.btn(pyxel.KEY_Z):
             if self.state == PlayerState.ATTACHING:
@@ -289,6 +328,7 @@ class Player(moveable_obj.MoveableObj):
                         level_obj.dettach()
                 if self.state == PlayerState.AIMING:
                     self.process_aim_release()
+                    self.any_attached = False
                 else:
                     self.process_first_attack_frame()
 
@@ -300,13 +340,14 @@ class Player(moveable_obj.MoveableObj):
             else:
                 self.de_attract_objects()
                 self.state = PlayerState.NORMAL
+                self.any_attached = False
 
     def process_aiming(self):
         dummy = 1
 
     def process_aim_release(self):
         # apply force to all objects in direction of player movement
-        self.attack_scenery_collision(dir = self.dir)
+        self.attack_scenery_collision(dir = self.last_nonzero_dir)
         self.state = PlayerState.NORMAL
 
     def draw_attack(self):
@@ -334,7 +375,7 @@ class Player(moveable_obj.MoveableObj):
             # draw aim line (has to be drawn after the rectangle)
             sx = self.x*8+4-self.levels.camera.x
             sy = self.y*8+4-self.levels.camera.y
-            pyxel.line(sx,sy,sx+self.dir[0]*16,sy+self.dir[1]*16, 3)
+            pyxel.line(sx,sy,sx+self.last_nonzero_dir[0]*16,sy+self.last_nonzero_dir[1]*16, 3)
 
     def get_attack_bounds(self):
         min_x = 8*(self.x-1)
@@ -346,14 +387,14 @@ class Player(moveable_obj.MoveableObj):
 
     def process_first_attack_frame(self):
         self.state = PlayerState.ATTACKING
-        self.attackFrame = pyxel.frame_count # used for cooldown
+        self.attack_frame = pyxel.frame_count # used for cooldown
 
         # do stuff that only happens on first attack frame
         self.attack_wall_pushback()
         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
 
     def process_attack(self):
-        if pyxel.frame_count - self.attackFrame > self.attack_cooldown:
+        if pyxel.frame_count - self.attack_frame > self.attack_cooldown:
             self.state = PlayerState.NORMAL
         else: # attack not finished, do stuff that happens on every attack frame
             # check scenery and AI collision
@@ -372,9 +413,11 @@ class Player(moveable_obj.MoveableObj):
                         dir_x = pyxel.cos(angle)
                         dir_y = pyxel.sin(angle)
                     else:
-                        dir_x = -dir[0]/self.aim_move_penalty
-                        dir_y = -dir[1]/self.aim_move_penalty
-
+                        # dir_x = -dir[0]*self.aim_vel_multiplier
+                        # dir_y = -dir[1]*self.aim_vel_multiplier
+                        dir_x = -pyxel.sgn(dir[0])*self.aim_vel_multiplier
+                        dir_y = -pyxel.sgn(dir[1])*self.aim_vel_multiplier
+                        
                     level_obj.forces.append(
                         [-dir_x*self.attack_object_force,
                         -dir_y*self.attack_object_force,
@@ -419,7 +462,7 @@ class Player(moveable_obj.MoveableObj):
             print('force dir:',force_dir)
             self.forces.append(
                 [self.wall_pushback_x,self.wall_pushback_y,
-                self.attack_knockback_cooldown])
+                self.attack_knockback_cooldown+20])
             pyxel.play(2, sound_lookup.player_attack_hit_wall)
 
     def attract_objects(self):
@@ -430,7 +473,7 @@ class Player(moveable_obj.MoveableObj):
         for level_obj in self.levels.level_objs:
             if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
                 level_obj.attach(self)
-                print('attached')
+                self.any_attached = True
 
     def de_attract_objects(self):
         for level_obj in self.levels.level_objs:

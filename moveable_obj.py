@@ -21,12 +21,14 @@ class MoveableObj:
         self.max_time_over_pit = 6
 
         # movement properties
-        self.accel = .04
+        self.accel = 4
         self.deccel = .1
         self.max_vel = .4
         self.vel_x = 0
         self.vel_y = 0
         self.dir = [0,0]
+        self.force_accel = 4
+
 
         # for non-velocity movement
         self.speed = .2
@@ -64,6 +66,32 @@ class MoveableObj:
 
         return [newX,newY]
 
+    def apply_forces_with_velocity(self,newX,newY,tm_val):
+        # deaccelerate
+        if tm_val != (3,0):
+            if self.vel_y != 0:
+                if abs(self.vel_y) < .1:
+                    self.vel_y = 0
+                else:
+                    self.vel_y -= self.deccel*pyxel.sgn(self.vel_y)
+
+            if self.vel_x != 0:
+                if abs(self.vel_x) < .1:
+                    self.vel_x = 0
+                else:
+                    self.vel_x -= self.deccel*pyxel.sgn(self.vel_x)
+        
+        for idx,vals in enumerate(self.forces):
+            self.vel_x += vals[0]*self.force_accel
+            self.vel_y += vals[1]*self.force_accel
+
+            self.forces.pop(idx)
+
+        newX += self.vel_x
+        newY += self.vel_y
+
+        return [newX,newY]
+
     # called from main.py on each moveable object in a level
     def update(self):
         newX = self.x
@@ -74,7 +102,8 @@ class MoveableObj:
 
         tm_val = self.get_tilemap_value()
 
-        [newX,newY] = self.apply_forces(newX,newY,tm_val)
+        #[newX,newY] = self.apply_forces(newX,newY,tm_val)
+        [newX,newY] = self.apply_forces_with_velocity(newX,newY,tm_val)
         [newX,newY] = self.check_collision(newX,newY)
 
         self.x = newX

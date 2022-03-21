@@ -11,8 +11,9 @@ class Ai(moveable_obj.MoveableObj):
         self.color = 14
         self.alive = True
         self.size = 9
+        self.player = None
 
-        print('hello')
+        self.speed = .05
 
     def draw(self):
         if self.alive:
@@ -23,6 +24,10 @@ class Ai(moveable_obj.MoveableObj):
         super().update()
         if self.health <= 0:
             self.alive = False
+
+        if self.player is not None:
+            self.x += -pyxel.sgn(self.x - self.player.x)*self.speed
+            self.y += -pyxel.sgn(self.y - self.player.y)*self.speed
 
     # def draw_self(self):
     #     if not self.alive:

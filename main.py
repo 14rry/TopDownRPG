@@ -12,6 +12,8 @@ import levels
 import dialog
 import player
 import tile_lookup
+import ai
+import tele_ball
 
 class App:
     def __init__(self):
@@ -28,6 +30,11 @@ class App:
     def startGame(self):
         self.levels = levels.LevelHandler([0,1])
         self.player = player.Player(1,1,self.levels)
+
+        # assign player to AI
+        for lvl_obj in self.levels.level_objs:
+            if isinstance(lvl_obj,ai.Ai):
+                lvl_obj.player = self.player
         
         #self.currentAI = levels.loadAI()
         
@@ -52,13 +59,6 @@ class App:
         if self.dialogScreen:
             if pyxel.btnr(pyxel.KEY_Z):
                 self.dialogScreen = False
-
-        # check enemy collision
-        # for baddy in self.currentAI:
-        #     if (baddy.alive and 
-        #         baddy.x == self.player.x and
-        #         baddy.y == self.player.y):
-        #         self.playerHealth -= 1
         
         [newX,newY] = self.player.move()
 
@@ -71,6 +71,12 @@ class App:
         if did_change:
             self.player.level_start_x = newX
             self.player.level_start_y = newY
+            self.player.grapple_mag = 0
+
+            # assign player to AI
+            for lvl_obj in self.levels.level_objs:
+                if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
+                    lvl_obj.player = self.player
 
         # check if we need to run dialog
         roundX = round(newX)

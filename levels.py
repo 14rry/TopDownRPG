@@ -3,6 +3,7 @@ import pyxel
 import tile_lookup
 import moveable_obj
 import camera
+import tele_ball
 
 class LevelHandler:
     def __init__(self,lvl_idx=[1,1]):
@@ -10,11 +11,6 @@ class LevelHandler:
         self.level_size = [16,16]
         self.screen_size = 16
         self.grid_size = 8
-
-        # emptyAI = [ai.ai(0,0,False)]
-
-        # level_ai = np.array([[emptyAI,emptyAI,emptyAI,emptyAI],
-        #                     [level1_ai,emptyAI,emptyAI,emptyAI]])
 
         self.max_x = 3
         self.max_y = 1
@@ -83,11 +79,12 @@ class LevelHandler:
                 tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
                 if tm_val == tile_lookup.ball:
                     self.level_objs.append(moveable_obj.MoveableObj(i,j,self,tm_val))
-                    # replace ball tile with floor
-                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
+                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # replace tile with (0,0) floor
                 elif tm_val == tile_lookup.ai:
-                    print('hi')
                     self.level_objs.append(ai.Ai(i,j,self,tm_val))
+                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
+                elif tm_val == tile_lookup.tele_ball:
+                    self.level_objs.append(tele_ball.TeleBall(i,j,self,tm_val))
                     pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
 
     def check_for_change(self,roundX,roundY,newX,newY):
