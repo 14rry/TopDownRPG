@@ -5,6 +5,7 @@ import sound_lookup
 import tile_lookup
 import ai
 from enum import Enum
+import player_animation
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -18,6 +19,8 @@ class Player(moveable_obj.MoveableObj):
         self.invuln_frames = 0
         self.max_invuln_frames = 20
         self.money = 0
+
+        self.animator = player_animation.PlayerAnimation()
 
         # movement properties
         self.accel = .025
@@ -128,9 +131,6 @@ class Player(moveable_obj.MoveableObj):
         newX = self.x + (self.grapple_mag*pyxel.cos(angle))
         newY = self.y + (self.grapple_mag*pyxel.sin(angle))
 
-        print(self.grapple_mag)
-
-
         return [newX,newY]
 
     def move_like_a_car(self,dir_x,dir_y):
@@ -221,7 +221,6 @@ class Player(moveable_obj.MoveableObj):
 
         if (newX2 != newX) or (newY2 != newY): # collided
             self.grapple_mag = 0
-            print('collision')
 
         newX = newX2
         newY = newY2
@@ -261,34 +260,20 @@ class Player(moveable_obj.MoveableObj):
     def draw(self):
         self.draw_attack()
 
-        # selects the up/down sprite and sets direction
-        if self.dir[1] == 1:
-            self.w_mod = 1
-            self.sprite = 8
-        elif self.dir[1] == -1:
-            self.w_mod = -1
-            self.sprite = 8
-
-        # selects the left/right sprite and sets direction
-        if self.dir[0] == 1:
-            self.sprite = 0
-            self.h_mod = -1
-        elif self.dir[0] == -1:
-            self.sprite = 0
-            self.h_mod = 1
+        [sprite,lr_flip] = self.animator.get_frame_sprite(self.dir)
 
         if self.invuln_frames % 2 == 0: # flash on hit
-            pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,self.sprite,8,8*self.h_mod,8*self.w_mod,7)
+            pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,sprite[0]*8,sprite[1]*8,8*lr_flip,8,15)
 
         # draw line showing movement for debugging
-        sx = self.x*8+4-self.levels.camera.x
-        sy = self.y*8+4-self.levels.camera.y
-        pyxel.line(sx,sy,sx+pyxel.cos(self.move_angle)*8,sy+pyxel.sin(self.move_angle)*8, 3)
+        # sx = self.x*8+4-self.levels.camera.x
+        # sy = self.y*8+4-self.levels.camera.y
+        # pyxel.line(sx,sy,sx+pyxel.cos(self.move_angle)*8,sy+pyxel.sin(self.move_angle)*8, 3)
         
         # draw attack wall push direction
-        sx = self.x*8+4-self.levels.camera.x
-        sy = self.y*8+4-self.levels.camera.y
-        pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
+        # sx = self.x*8+4-self.levels.camera.x
+        # sy = self.y*8+4-self.levels.camera.y
+        # pyxel.line(sx,sy,sx+self.wall_pushback_x*16,sy+self.wall_pushback_y*16,5)
 
     ##############################################################################
     # ATTACK FUNCTIONS
