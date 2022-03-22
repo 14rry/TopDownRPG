@@ -41,15 +41,11 @@ wall_highlight = (2,7)
 coin = (0,8)
 transparent = (1,8)
 
-# player sprites
-player_forward = [(1,1)]
-player_backward = [(1,2)]
-player_left = [(0,1)]
-player_move_left = [(4,2),(0,1),(5,2)]
-
+# player sprites (xcoord,ycoord,num_frames (optional))
 player = {
-    PlayerAnimationState.IDLE: [(1,1)],
-    PlayerAnimationState.IDLE_LEFT: [(0,1)],
+    PlayerAnimationState.IDLE: [(1,1,10),(4,1),(1,1,10),(5,1)],
+    PlayerAnimationState.IDLE_LEFT: [(0,1,10),(4,0),(0,1,10),(5,0)],
+    PlayerAnimationState.IDLE_UP: [(1,2,20),(0,2)],
     PlayerAnimationState.MOVE_UP: [(1,2)],
     PlayerAnimationState.MOVE_LEFT: [(4,2),(0,1),(5,2)],
     PlayerAnimationState.MOVE_DOWN: [(1,1)]

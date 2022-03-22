@@ -8,6 +8,8 @@ class PlayerAnimation():
         self.frame = 0
         self.sub_frame = 0
         self.max_sub_frame = 6 # number of frames to repeat.. controls animation speed
+        self.repeat = 0
+        self.max_repeat = 0
         self.left_right_flip = 1
 
         self.animation_table = []
@@ -26,11 +28,22 @@ class PlayerAnimation():
         self.sub_frame += 1
         if self.sub_frame > self.max_sub_frame:
             self.sub_frame = 0
-            self.frame += 1
-            if self.frame > self.max_frame:
-                self.frame = 0
+            self.repeat += 1
+            if self.repeat > self.max_repeat:
+                self.repeat = 0
+                self.frame += 1
+                if self.frame > self.max_frame: # step to next sprite in animation
+                    self.frame = 0
 
-        self.sprite = self.animation_table[self.frame]
+        temp = self.animation_table[self.frame]
+
+        # defining num repitions is optional.. here's how we handle it
+        if len(temp) == 2:
+            self.max_repeat = 0
+            self.sprite = temp
+        else:
+            self.max_repeat = temp[2]
+            self.sprite = (temp[0],temp[1])
 
     def update_direction(self,dir):
         prev_state = self.state
@@ -40,6 +53,8 @@ class PlayerAnimation():
                 self.state = PlayerAnimationState.IDLE_LEFT
             elif self.state == PlayerAnimationState.MOVE_DOWN:
                 self.state = PlayerAnimationState.IDLE
+            elif self.state == PlayerAnimationState.MOVE_UP:
+                self.state = PlayerAnimationState.IDLE_UP
 
         else: # moving
             # selects the up/down sprite and sets direction
@@ -72,3 +87,4 @@ class PlayerAnimationState(Enum):
     MOVE_UP = 4
     MOVE_DOWN = 5
     IDLE_LEFT = 6
+    IDLE_UP = 7
