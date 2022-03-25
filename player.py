@@ -217,7 +217,11 @@ class Player(moveable_obj.MoveableObj):
 
     def check_collision(self, newX, newY):
         # general moveable objects collision check (spikes, walls, pits)
-        [newX2,newY2] = super().check_collision(newX, newY)
+        #[newX2,newY2] = super().check_collision(newX, newY)
+
+        [newX2,newY2] = self.spike_collision(newX,newY)
+        [newX2,newY2,tm_val] = self.wall_collision_check(newX2,newY2)
+        [newX2,newY2] = self.pit_collision_check(newX2,newY2,tm_val)
 
         if (newX2 != newX) or (newY2 != newY): # collided
             self.grapple_mag = 0

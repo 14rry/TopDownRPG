@@ -6,14 +6,13 @@ Created on Fri Aug 10 22:43:07 2018
 """
 
 import pyxel
-import numpy as np
-
 import levels
 import dialog
 import player
-import tile_lookup
 import ai
 import tele_ball
+import swarm
+import contrail
 
 class App:
     def __init__(self):
@@ -24,16 +23,17 @@ class App:
         pyxel.init(self.levelSize*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
         pyxel.load("topdown.pyxres")
         self.startGame()
-        
         pyxel.run(self.update, self.draw)
         
     def startGame(self):
-        self.levels = levels.LevelHandler([0,1])
+        self.levels = levels.LevelHandler([1,2])
         self.player = player.Player(1,1,self.levels)
+        #self.swarm = swarm.Swarm(self.levelSize)
+        self.contrail = contrail.Contrail(self.player)
 
         # assign player to AI
         for lvl_obj in self.levels.level_objs:
-            if isinstance(lvl_obj,ai.Ai):
+            if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
                 lvl_obj.player = self.player
         
         #self.currentAI = levels.loadAI()
@@ -94,6 +94,9 @@ class App:
         self.levels.camera.update(self.player.x,self.player.y)
             
         self.player.update()
+        # self.swarm.new_pos([self.player.x*8,self.player.y*8])
+        # self.swarm.update()
+        self.contrail.update()
         
     def draw(self):        
         pyxel.cls(6)
@@ -101,28 +104,27 @@ class App:
         # draw map
         self.levels.draw()
 
-        # draw ai
-        # for baddy in self.currentAI:
-        #     baddy.draw_self()
-
         # draw player        
+        self.contrail.draw()
         self.player.draw()
+
+        # draw level objects
+        for val in self.levels.level_objs:
+            val.draw()
         
         if self.dialogScreen:
             pyxel.rect(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,0)
             pyxel.rectb(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,3)
             for textIndex in range(len(self.dialogText)):
                 pyxel.text(self.grid_size,self.grid_size*(textIndex+1),self.dialogText[textIndex],3)
-
-        # draw level objects
-        for val in self.levels.level_objs:
-            val.draw()
                 
         # draw health bar
         xHealth = self.player.health*self.grid_size*self.levelSize/10
         pyxel.rect(0,self.levelSize*self.grid_size,xHealth,9,8)
 
         pyxel.text(0,self.levelSize*self.grid_size,str(self.player.health),3)
+
+        # self.swarm.draw()
    
     def reset(self):
         self.levels.clean_up_scenery()

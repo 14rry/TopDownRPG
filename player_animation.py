@@ -1,5 +1,4 @@
 from enum import Enum
-from player import Player
 import tile_lookup
 
 class PlayerAnimation():

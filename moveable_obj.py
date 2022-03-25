@@ -29,7 +29,6 @@ class MoveableObj:
         self.dir = [0,0]
         self.force_accel = 4
 
-
         # for non-velocity movement
         self.speed = .2
         self.top_boost = .5
@@ -127,6 +126,7 @@ class MoveableObj:
             8,8,15)
 
     def check_collision(self,newX,newY):
+        # TODO: rework collision - optimize.. shouldn't need to check tile multile times
 
         [newX,newY] = self.spike_collision(newX,newY)
         [newX,newY,tm_val] = self.wall_collision_check(newX,newY)
@@ -170,13 +170,13 @@ class MoveableObj:
 
         return [newX,newY]
 
-    def wall_collision_check(self,newX,newY):
+    def wall_collision_check(self,newX,newY,offset=0):
 
         x_final = self.x
         y_final = self.y
 
         roundX = round(newX)
-        roundY = round(newY)
+        roundY = round(newY+offset)
         roundOldX = round(self.x)
         roundOldY = round(self.y)
 
