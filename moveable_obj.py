@@ -9,12 +9,14 @@ class MoveableObj:
         self.y = y
         self.levels = levels
 
+        self.takes_player_damage = False
+
         self.attached_to = None
 
         self.level_start_x = self.x
         self.level_start_y = self.y
         
-        self.health = 10
+        self.health = 1
         self.alive = True
 
         self.time_over_pit = 0
@@ -92,7 +94,7 @@ class MoveableObj:
         return [newX,newY]
 
     # called from main.py on each moveable object in a level
-    def update(self):
+    def update(self,xdelta = 0, ydelta = 0):
         newX = self.x
         newY = self.y
         if self.attached_to != None:
@@ -102,11 +104,16 @@ class MoveableObj:
         tm_val = self.get_tilemap_value()
 
         #[newX,newY] = self.apply_forces(newX,newY,tm_val)
+        newX += xdelta
+        newY += ydelta
         [newX,newY] = self.apply_forces_with_velocity(newX,newY,tm_val)
         [newX,newY] = self.check_collision(newX,newY)
 
         self.x = newX
         self.y = newY
+
+        if self.health <= 0:
+            self.alive = False
 
     def zero_attack_forces_x(self):
         for idx,vals in enumerate(self.forces):
@@ -117,13 +124,14 @@ class MoveableObj:
             self.forces[idx][1] = 0
 
     def draw(self):
-        pyxel.blt(
-            self.x*8-self.levels.camera.x,
-            self.y*8-self.levels.camera.y, 
-            0, 
-            self.sprite_index[0]*8,
-            self.sprite_index[1]*8,
-            8,8,15)
+        if self.alive:
+            pyxel.blt(
+                self.x*8-self.levels.camera.x,
+                self.y*8-self.levels.camera.y, 
+                0, 
+                self.sprite_index[0]*8,
+                self.sprite_index[1]*8,
+                8,8,15)
 
     def check_collision(self,newX,newY):
         # TODO: rework collision - optimize.. shouldn't need to check tile multile times

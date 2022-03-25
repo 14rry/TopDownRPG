@@ -12,22 +12,22 @@ class Ai(moveable_obj.MoveableObj):
         self.alive = True
         self.size = 9
         self.player = None
+        self.health = 10
+        self.takes_player_damage = True
 
         self.speed = .05
 
     def draw(self):
-        if self.alive:
-            super().draw()
+        super().draw()
         
     def update(self):
-        # general moveable objects collision check (spikes, walls, pits)
-        super().update()
-        if self.health <= 0:
-            self.alive = False
-
+        xd = 0
+        yd = 0
         if self.player is not None:
-            self.x += -pyxel.sgn(self.x - self.player.x)*self.speed
-            self.y += -pyxel.sgn(self.y - self.player.y)*self.speed
+            xd = -pyxel.sgn(self.x - self.player.x)*self.speed
+            yd = -pyxel.sgn(self.y - self.player.y)*self.speed
+        # general moveable objects collision check (spikes, walls, pits)
+        super().update(xdelta = xd, ydelta = yd)
 
     # def draw_self(self):
     #     if not self.alive:

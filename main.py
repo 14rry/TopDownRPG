@@ -29,15 +29,13 @@ class App:
         self.levels = levels.LevelHandler([1,2])
         self.player = player.Player(1,1,self.levels)
         #self.swarm = swarm.Swarm(self.levelSize)
-        self.contrail = contrail.Contrail(self.player)
+        self.contrail = contrail.Contrail(self.player,self.levels.camera)
 
-        # assign player to AI
+        # assign player to AI and tele ball
         for lvl_obj in self.levels.level_objs:
             if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
                 lvl_obj.player = self.player
-        
-        #self.currentAI = levels.loadAI()
-        
+                
         self.dialogScreen = False
         self.dialogText = [""]
 
@@ -77,6 +75,8 @@ class App:
             for lvl_obj in self.levels.level_objs:
                 if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
                     lvl_obj.player = self.player
+
+            self.contrail.clear()
 
         # check if we need to run dialog
         roundX = round(newX)

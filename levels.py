@@ -25,9 +25,9 @@ class LevelHandler:
         # delete any unattached scenery and write it back into the tilemap
         for lvl_obj in self.level_objs:
             print(lvl_obj.attached_to)
-            if lvl_obj.attached_to == None:
+            if lvl_obj.attached_to == None and lvl_obj.alive == True:
                 tm_pos = self.player_pos_to_tm(round(lvl_obj.x),round(lvl_obj.y))
-                pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],lvl_obj.sprite_index)
+                pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],lvl_obj.sprite_index)
             else:
                 new_lvl_objs.append(lvl_obj)
                 #print('bye:',tm_pos,lvl_obj.sprite_index)
@@ -76,16 +76,20 @@ class LevelHandler:
         for i in range(self.level_size[0]):
             for j in range(self.level_size[1]):
                 tm_pos = self.player_pos_to_tm(i,j)
-                tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+                tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
+                is_obj = False
                 if tm_val == tile_lookup.ball:
                     self.level_objs.append(moveable_obj.MoveableObj(i,j,self,tm_val))
-                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # replace tile with (0,0) floor
+                    is_obj = True
                 elif tm_val == tile_lookup.ai:
                     self.level_objs.append(ai.Ai(i,j,self,tm_val))
-                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
+                    is_obj = True
                 elif tm_val == tile_lookup.tele_ball:
                     self.level_objs.append(tele_ball.TeleBall(i,j,self,tm_val))
-                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],(0,0)) # (0,0) is floor
+                    is_obj = True
+
+                if is_obj == True:
+                    pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],(1,8)) # (1,8) is transparent tile on layer 2
 
     def check_for_change(self,roundX,roundY,newX,newY):
         level_did_change = False

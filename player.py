@@ -218,7 +218,7 @@ class Player(moveable_obj.MoveableObj):
     def check_collision(self, newX, newY):
         # general moveable objects collision check (spikes, walls, pits)
         #[newX2,newY2] = super().check_collision(newX, newY)
-
+        # TODO: rework collision - optimize.. shouldn't need to check tile multile times
         [newX2,newY2] = self.spike_collision(newX,newY)
         [newX2,newY2,tm_val] = self.wall_collision_check(newX2,newY2)
         [newX2,newY2] = self.pit_collision_check(newX2,newY2,tm_val)
@@ -380,6 +380,7 @@ class Player(moveable_obj.MoveableObj):
 
         # do stuff that only happens on first attack frame
         self.attack_wall_pushback()
+        self.attack_scenery_collision()
         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
 
     def process_attack(self):
@@ -394,7 +395,8 @@ class Player(moveable_obj.MoveableObj):
         for level_obj in self.levels.level_objs:
             if level_obj.alive == True:
                 if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-                    level_obj.health -= self.attack_damage
+                    if level_obj.takes_player_damage == True:
+                        level_obj.health -= self.attack_damage
                     
                     if dir is None:
                         # calculate angle between player and object and apply force in that direction
@@ -460,9 +462,10 @@ class Player(moveable_obj.MoveableObj):
         [min_x,min_y,w,h] = self.get_attack_bounds()
 
         for level_obj in self.levels.level_objs:
-            if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-                level_obj.attach(self)
-                self.any_attached = True
+            if level_obj.alive == True:
+                if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
+                    level_obj.attach(self)
+                    self.any_attached = True
 
     def de_attract_objects(self):
         for level_obj in self.levels.level_objs:

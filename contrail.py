@@ -1,14 +1,19 @@
 import pyxel
 
 class Contrail():
-    def __init__(self,target):
+    def __init__(self,target,camera):
         self.target = target
+        self.camera = camera
         self.trail = []
         self.ages = []
         self.lifetime_frames = 120
 
         #self.color = 5
         self.color = [1,2,3]
+
+    def clear(self):
+        self.trail = []
+        self.ages = []
 
     def update(self):
         new_ages = self.ages
@@ -27,6 +32,9 @@ class Contrail():
         for idx,pos in enumerate(self.trail):
             color_idx = round((self.ages[idx]/self.lifetime_frames) * (len(self.color)-1))
             #pyxel.pset(pos[0]*8+4,pos[1]*8+4,self.color)
-            pyxel.circ(pos[0]*8+4,pos[1]*8+4,2,self.color[color_idx])
+            pyxel.circ(
+                pos[0]*8+4-self.camera.x,
+                pos[1]*8+4-self.camera.y,
+                2,self.color[color_idx])
 
 
