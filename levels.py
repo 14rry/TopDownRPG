@@ -44,21 +44,19 @@ class LevelHandler:
         player_offset = [0,0]
 
         is_big_room = False
-        for big_rooms in tile_lookup.big_rooms:
+        self.level_size = [16,16] # default one screen size
+        for big_room in tile_lookup.big_rooms:
             if is_big_room:
                 break
-            for idx,room in enumerate(big_rooms[:-2]):
+            for idx,room in enumerate(big_room[:-1]):
                 print(room)
                 if self.level_index == room:
                     is_big_room = True
-                    self.level_size = big_rooms[-1]
+                    self.level_size = big_room[-1]
                     if idx > 0: # not the origin room
-                        self.level_index = big_rooms[0] # set level index to origin room
-                        player_offset = [(room[0]-big_rooms[0][0])*16,(room[1]-big_rooms[0][1])*16]
+                        self.level_index = big_room[0] # set level index to origin room
+                        player_offset = [(room[0]-big_room[0][0])*16,(room[1]-big_room[0][1])*16]
                     break
-
-        if not is_big_room:
-            self.level_size = [16,16]
 
         print("level:",self.level_index)
 
@@ -92,41 +90,41 @@ class LevelHandler:
                     pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],(1,8)) # (1,8) is transparent tile on layer 2
 
     def check_for_change(self,roundX,roundY,newX,newY):
+        new_level = [0,0]
         level_did_change = False
-        if (roundX == self.level_size[0] or 
-            roundY == self.level_size[1] or
-            roundX < 0 or
-            roundY < 0):
-                new_level = [0,0]
-                if roundX == self.level_size[0]:
-                    new_level = [1,0]
-                    level_offset = [pyxel.floor((newX-1)/16),pyxel.floor(newY/16)] # accounts for the possibility of being on a different level in big rooms (i.e. if player moves to the right in a big room, the true 'level' index could be 2,3 instead of 1,3)
-                    #level_offset = [0,pyxel.floor(newY/16)] # accounts for the possibility of being on a different level in big rooms (i.e. if player moves to the right in a big room, the true 'level' index could be 2,3 instead of 1,3)
-                    newX = 0
-                elif roundX < 0:
-                    new_level = [-1,0]
-                    level_offset = [pyxel.floor((newX+1)/16),pyxel.floor(newY/16)]
-                    newX = self.screen_size - 1
-                if roundY == self.level_size[1]:
-                    new_level = [0,1]
-                    level_offset = [pyxel.floor(newX/16),pyxel.floor((newY-1)/16)]
-                    newY = 0
-                elif roundY < 0:
-                    new_level = [0,-1]
-                    level_offset = [pyxel.floor(newX/16),pyxel.floor((newY+1)/16)]
-                    newY = self.screen_size - 1
 
-                player_offset = self.change_level(new_level,level_offset)
+        if roundX >= self.level_size[0]:
+            new_level = [1,0]
+            level_offset = [pyxel.floor((newX-1)/16),pyxel.floor(newY/16)] # accounts for the possibility of being on a different level in big rooms (i.e. if player moves to the right in a big room, the true 'level' index could be 2,3 instead of 1,3)
+            newX = 0
+            level_offset2 = [0,pyxel.floor(newY/16)] # accounts for the possibility of being on a different level in big rooms (i.e. if player moves to the right in a big room, the true 'level' index could be 2,3 instead of 1,3)
+        elif roundX < 0:
+            new_level = [-1,0]
+            level_offset = [pyxel.floor((newX+1)/16),pyxel.floor(newY/16)]
+            newX = self.screen_size - 1
+            level_offset2 = [0,pyxel.floor(newY/16)]
 
-                print('lvl off:',level_offset)
-                newX += player_offset[0] - level_offset[0]*16
-                newY += player_offset[1] - level_offset[1]*16
+        if roundY >= self.level_size[1]:
+            new_level = [0,1]
+            level_offset = [pyxel.floor(newX/16),pyxel.floor((newY-1)/16)]
+            newY = 0
+            level_offset2 = [pyxel.floor((newX)/16),0]
 
-                print(newX,newY)
-                level_did_change = True
-                # TODO: fix AI with new tilemaps
-                # # load AI
-                # self.currentAI = levels.loadAI()
+        elif roundY < 0:
+            new_level = [0,-1]
+            level_offset = [pyxel.floor(newX/16),pyxel.floor((newY+1)/16)]
+            newY = self.screen_size - 1
+            level_offset2 = [pyxel.floor((newX)/16),0]
+
+        if not new_level == [0,0]:
+            player_offset = self.change_level(new_level,level_offset)
+
+            print('lvl off:',level_offset)
+            newX += player_offset[0] - level_offset2[0]*16
+            newY += player_offset[1] - level_offset2[1]*16
+
+            print(newX,newY)
+            level_did_change = True
 
         return [newX,newY,level_did_change]
 

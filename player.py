@@ -49,7 +49,9 @@ class Player(moveable_obj.MoveableObj):
         # attack properties
         #self.attack = False
         self.attack_frame = 0
+        self.attack_duration = 14
         self.attack_cooldown = 14
+        self.attack_cooldown_count = 0
         self.attack_knockback_force = .2 # knockback from wall
         self.attack_knockback_cooldown = 5
         self.attack_object_force = .1 # force against moveable_obj
@@ -284,6 +286,10 @@ class Player(moveable_obj.MoveableObj):
     ##############################################################################
 
     def update(self):
+
+        if self.attack_cooldown_count > 0:
+            self.attack_cooldown_count -= 1
+
         if self.state == PlayerState.ATTACKING:
             self.process_attack()
 
@@ -306,7 +312,9 @@ class Player(moveable_obj.MoveableObj):
                     self.state = PlayerState.AIMING
             elif self.state == PlayerState.AIMING:
                 self.process_aiming()
-            elif not self.state == PlayerState.ATTACKING and self.z_press == False:
+            elif (not self.state == PlayerState.ATTACKING
+                    and self.z_press == False 
+                    and self.attack_cooldown_count == 0):
                 self.z_press = True
                 self.process_first_attack_frame()
         else:
@@ -384,8 +392,9 @@ class Player(moveable_obj.MoveableObj):
         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
 
     def process_attack(self):
-        if pyxel.frame_count - self.attack_frame > self.attack_cooldown:
+        if pyxel.frame_count - self.attack_frame > self.attack_duration:
             self.state = PlayerState.NORMAL
+            self.attack_cooldown_count = self.attack_cooldown
         else: # attack not finished, do stuff that happens on every attack frame
             # check scenery and AI collision
             self.attack_scenery_collision()

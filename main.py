@@ -26,7 +26,7 @@ class App:
         pyxel.run(self.update, self.draw)
         
     def startGame(self):
-        self.levels = levels.LevelHandler([1,2])
+        self.levels = levels.LevelHandler([1,1])
         self.player = player.Player(1,1,self.levels)
         #self.swarm = swarm.Swarm(self.levelSize)
         self.contrail = contrail.Contrail(self.player,self.levels.camera)
