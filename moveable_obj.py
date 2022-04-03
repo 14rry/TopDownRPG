@@ -12,7 +12,7 @@ class MoveableObj:
         # movement properties
         self.accel = .04
         self.deccel = .1
-        self.max_vel = .4
+        self.max_vel = -1
         self.vel_x = 0
         self.vel_y = 0
         self.dir = [0,0]

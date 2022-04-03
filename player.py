@@ -76,7 +76,7 @@ class Player(moveable_obj.MoveableObj):
         #print(pyxel.sqrt(self.vel_x*self.vel_x+self.vel_y*self.vel_y))
 
         newX = self.x + self.vel_x
-        newY = self.y + self.vel_y
+        newY = self. y + self.vel_y
 
         return [newX,newY]
 
@@ -89,7 +89,7 @@ class Player(moveable_obj.MoveableObj):
 
     def move(self):
         # player movement logic  
-        newX = self.x
+        newX = self. x
         newY = self.y
         
         dir_x = 0

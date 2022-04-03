@@ -55,7 +55,7 @@ class LevelHandler:
         #return level1_ai
     
     def reset(self):
-        self.level_index = [1,1]
+        self.level_index = [1,2]
         # level1_ai = [ai.ai(), ai.ai(10,10)]
 
         # self.level_ai = np.array([[emptyAI,emptyAI,emptyAI,emptyAI],
