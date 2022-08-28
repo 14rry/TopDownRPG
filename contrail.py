@@ -18,6 +18,7 @@ class Contrail():
     def clear(self):
         self.trail = []
         self.ages = []
+        self.intersect_points = []
 
     def update(self):
         new_ages = self.ages

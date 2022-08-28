@@ -11,7 +11,9 @@ class MoveableObj:
 
         self.takes_player_damage = False
 
+        self.is_attachable = True
         self.attached_to = None
+        self.being_thrown = False
 
         self.level_start_x = self.x
         self.level_start_y = self.y
@@ -109,6 +111,10 @@ class MoveableObj:
         [newX,newY] = self.apply_forces_with_velocity(newX,newY,tm_val)
         [newX,newY] = self.check_collision(newX,newY)
 
+        if self.being_thrown: # check if we stopped moving aka stopped being thrown
+            if self.x == newX and self.y == newY: # not moving
+                self.being_thrown = False
+
         self.x = newX
         self.y = newY
 
@@ -125,6 +131,14 @@ class MoveableObj:
 
     def draw(self):
         if self.alive:
+
+            if self.being_thrown:
+                pyxel.circ(
+                    self.x*8+4-self.levels.camera.x,
+                    self.y*8+4-self.levels.camera.y,
+                    12,
+                    10)
+
             pyxel.blt(
                 self.x*8-self.levels.camera.x,
                 self.y*8-self.levels.camera.y, 

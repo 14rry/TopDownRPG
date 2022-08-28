@@ -12,6 +12,8 @@ class LevelHandler:
         self.screen_size = 16
         self.grid_size = 8
 
+        self.level_collision = [ [0] * self.level_size[0] for _ in range(self.level_size[1])]
+
         self.max_x = 3
         self.max_y = 1
 
@@ -36,7 +38,7 @@ class LevelHandler:
 
     def change_level(self,new_level,level_offset):
         self.level_objs = self.clean_up_scenery()
-
+        
         self.level_index = [self.level_index[0] + level_offset[0] + new_level[0], 
             self.level_index[1] + level_offset[1] + new_level[1]]
 
@@ -60,8 +62,10 @@ class LevelHandler:
 
         print("level:",self.level_index)
 
-        self.camera.change_level(self.level_size,player_offset)
+        self.camera.change_level(self.level_size,player_offset,new_level)
         self.update_level_objs()
+
+        print(self.level_collision)
             
         return player_offset
 
@@ -69,7 +73,10 @@ class LevelHandler:
     #     return level_ai[levelIndex[0],levelIndex[1]]
         #return level1_ai
 
+    # also updates collision matrix
     def update_level_objs(self):
+        self.level_collision = [ [0] * self.level_size[0] for _ in range(self.level_size[1])]
+
         # build list of active scenery, ai, etc. based on presence of certain special tiles
         for i in range(self.level_size[0]):
             for j in range(self.level_size[1]):
@@ -88,6 +95,11 @@ class LevelHandler:
 
                 if is_obj == True:
                     pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],(1,8)) # (1,8) is transparent tile on layer 2
+
+                # build wall matrix for pathfiding
+                tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+                if tile_lookup.collision[tm_val[1]][tm_val[0]] == 1:
+                    self.level_collision[i][j] = 1
 
     def check_for_change(self,roundX,roundY,newX,newY):
         new_level = [0,0]

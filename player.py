@@ -6,6 +6,7 @@ import tile_lookup
 import ai
 from enum import Enum
 import player_animation
+import input_handler
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -13,6 +14,8 @@ class Player(moveable_obj.MoveableObj):
         #
         # overwrite defaults on inherrited properties
         #
+        self.input_handler = input_handler.InputHandler()
+
         self.health = 10
         self.ai_damage = 1 # amount of damage ai inflicts on player collision
         self.ai_pushback = .2
@@ -167,13 +170,13 @@ class Player(moveable_obj.MoveableObj):
         tm_val = self.get_tilemap_value()
 
         if tm_val != (3,0):
-            if pyxel.btn(pyxel.KEY_RIGHT):
+            if self.input_handler.is_pressed('right'):
                 dir_x += 1
-            if pyxel.btn(pyxel.KEY_LEFT):
+            if self.input_handler.is_pressed('left'):
                 dir_x -= 1
-            if pyxel.btn(pyxel.KEY_UP):
+            if self.input_handler.is_pressed('up'):
                 dir_y -= 1
-            if pyxel.btn(pyxel.KEY_DOWN):
+            if self.input_handler.is_pressed('down'):
                 dir_y += 1
 
             # account for faster diagonals
@@ -344,7 +347,7 @@ class Player(moveable_obj.MoveableObj):
 
     def process_aim_release(self):
         # apply force to all objects in direction of player movement
-        self.attack_scenery_collision(dir = self.last_nonzero_dir)
+        self.attack_scenery_collision(dir = self.last_nonzero_dir,throwing = True)
         self.state = PlayerState.NORMAL
 
     def draw_attack(self):
@@ -399,13 +402,13 @@ class Player(moveable_obj.MoveableObj):
             # check scenery and AI collision
             self.attack_scenery_collision()
 
-    def attack_scenery_collision(self,dir = None):
+    def attack_scenery_collision(self,dir = None,throwing = False):
         [min_x,min_y,w,h] = self.get_attack_bounds()
         for level_obj in self.levels.level_objs:
             if level_obj.alive == True:
                 if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
                     if level_obj.takes_player_damage == True:
-                        level_obj.health -= self.attack_damage
+                        level_obj.take_player_damage(self.attack_damage)
                     
                     if dir is None:
                         # calculate angle between player and object and apply force in that direction
@@ -425,6 +428,9 @@ class Player(moveable_obj.MoveableObj):
                     
                     if not (dir_x == 0 and dir_y == 0): # don't play sound if player let go of aim direction
                         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
+                        if throwing == True:
+                            level_obj.being_thrown = True
+                            print("have fun")
 
     def attack_wall_pushback(self):
         # attack pushback
@@ -471,7 +477,7 @@ class Player(moveable_obj.MoveableObj):
         [min_x,min_y,w,h] = self.get_attack_bounds()
 
         for level_obj in self.levels.level_objs:
-            if level_obj.alive == True:
+            if level_obj.alive == True and level_obj.is_attachable:
                 if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
                     level_obj.attach(self)
                     self.any_attached = True
