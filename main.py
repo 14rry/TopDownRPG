@@ -6,117 +6,146 @@ Created on Fri Aug 10 22:43:07 2018
 """
 
 import pyxel
-import numpy as np
-
 import levels
 import dialog
 import player
-import tile_lookup
+import ai
+import tele_ball
+import swarm
+import contrail
+import screen_effects
+from enum import Enum
 
 class App:
     def __init__(self):
+        self.playing_music = False
+
+        self.screen_effects = screen_effects.ScreenEffects()
+
         self.levelSize = 16
         self.grid_size = 8
-
-        pyxel.init(self.levelSize*self.grid_size, self.levelSize*self.grid_size+self.grid_size,fps = 60)
+        self.sidebar_width = 0 #12 # in num tiles
+        pyxel.init(self.levelSize*self.grid_size + self.sidebar_width*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
         pyxel.load("topdown.pyxres")
-
         self.startGame()
-        
         pyxel.run(self.update, self.draw)
         
     def startGame(self):
-        self.levels = levels.LevelHandler()
-        self.player = player.Player(4,4,self.levels)
-        self.levels.level_index = [1,1] # starting level
-        
-        #self.currentAI = levels.loadAI()
-        
+        self.state = AppState.INTRO
+        self.levels = levels.LevelHandler([1,1])
+        self.player = player.Player(1,1,self.levels)
+        #self.swarm = swarm.Swarm(self.levelSize)
+        self.contrail = contrail.Contrail(self.player,self.levels.camera)
+
+        # assign player to AI and tele ball
+        for lvl_obj in self.levels.level_objs:
+            if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
+                lvl_obj.player = self.player
+                
         self.dialogScreen = False
         self.dialogText = [""]
 
-        self.attack = False
-        self.attack_frame = 0
+        #pyxel.playm(1,0,True)
 
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
         if pyxel.btnp(pyxel.KEY_R):
             self.reset()
+        if pyxel.btnp(pyxel.KEY_M):
+            if self.playing_music:
+                pyxel.stop()
+                self.playing_music = False
+            else:
+                pyxel.playm(1,0,True)
+                self.playing_music = True
+
+        if self.state == AppState.INTRO:
+            done = self.screen_effects.fade_in()
+
+            if done:
+                self.state = AppState.RUNNING
+
+        if True: #self.state == AppState.RUNNING:
             
-        if self.dialogScreen:
-            if pyxel.btnr(pyxel.KEY_Z):
-                self.dialogScreen = False
-
-        # check enemy collision
-        # for baddy in self.currentAI:
-        #     if (baddy.alive and 
-        #         baddy.x == self.player.x and
-        #         baddy.y == self.player.y):
-        #         self.playerHealth -= 1
-        
-        [newX,newY] = self.player.move()
-
-        roundX = self.round_player_pos(newX)
-        roundY = self.round_player_pos(newY)
-        
-        # check if we need to change levels
-        [newX,newY] = self.levels.check_for_change(roundX,roundY,newX,newY)
-        [newX,newY] = self.player.check_collision(newX,newY)
-        self.player.x = newX
-        self.player.y = newY
-
-        roundX = self.round_player_pos(newX)
-        roundY = self.round_player_pos(newY)
-        tm_pos = self.levels.player_pos_to_tm(roundX,roundY)
-        tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
-
-        if tm_val == (2,1): # npc
-            self.dialogText = dialog.invoke(self.levels.level_index,roundX,roundY)
-            self.dialogScreen =  True
-
-        for level_obj in self.levels.level_objs:
-            level_obj.update()
+            if self.dialogScreen:
+                if pyxel.btnr(pyxel.KEY_Z):
+                    self.dialogScreen = False
             
-        self.player.process_attack()
+            [newX,newY] = self.player.move()
 
+            # check if we need to change levels
+            [newX,newY,did_change] = self.levels.check_for_change(round(newX),round(newY),newX,newY)            
+            [newX,newY] = self.player.check_collision(newX,newY)
+            self.player.x = newX
+            self.player.y = newY
+
+            if did_change:
+                self.player.level_start_x = newX
+                self.player.level_start_y = newY
+                self.player.grapple_mag = 0
+
+                # assign player to AI
+                for lvl_obj in self.levels.level_objs:
+                    if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
+                        lvl_obj.player = self.player
+
+                self.contrail.clear()
+
+            # check if we need to run dialog
+            roundX = round(newX)
+            roundY = round(newY)
+            tm_val = self.player.get_tilemap_value()
+            
+            if tm_val == (2,1): # npc
+                self.dialogText = dialog.invoke(self.levels.level_index,roundX,roundY)
+                self.dialogScreen =  True
+
+            # update non-player objects in the current level
+            for level_obj in self.levels.level_objs:
+                level_obj.update()
+
+            self.levels.camera.update(self.player.x,self.player.y)
+                
+            self.player.update()
+            # self.swarm.new_pos([self.player.x*8,self.player.y*8])
+            # self.swarm.update()
+            self.contrail.update()
         
     def draw(self):        
-        pyxel.cls(6)
+        pyxel.cls(1)
         
         # draw map
         self.levels.draw()
 
-        # draw ai
-        # for baddy in self.currentAI:
-        #     baddy.draw_self()
-
         # draw player        
+        self.contrail.draw()
         self.player.draw()
+
+        # draw level objects
+        for val in self.levels.level_objs:
+            val.draw()
         
         if self.dialogScreen:
             pyxel.rect(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,0)
             pyxel.rectb(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,3)
             for textIndex in range(len(self.dialogText)):
                 pyxel.text(self.grid_size,self.grid_size*(textIndex+1),self.dialogText[textIndex],3)
-
-        # draw level objects
-        for val in self.levels.level_objs:
-            val.draw()
                 
         # draw health bar
-        xHealth = (self.levelSize - 2*(self.grid_size - self.player.health))*self.grid_size
+        xHealth = self.player.health*self.grid_size*self.levelSize/10
         pyxel.rect(0,self.levelSize*self.grid_size,xHealth,9,8)
+
+        pyxel.text(0,self.levelSize*self.grid_size,str(self.player.health),3)
+
+        # self.swarm.draw()
    
     def reset(self):
-        self.levels.reset()
+        self.levels.clean_up_scenery()
         self.startGame()
 
-    def round_player_pos(self,val):
-        return round(val)
-        if dir > 0:
-            return pyxel.ceil(val)
-        else:
-            return pyxel.floor(val)
+class AppState(Enum):
+    INTRO = 0
+    RUNNING = 1
         
 App()
