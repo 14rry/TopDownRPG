@@ -390,7 +390,7 @@ class Player(moveable_obj.MoveableObj):
         self.attack_frame = pyxel.frame_count # used for cooldown
 
         # do stuff that only happens on first attack frame
-        self.attack_wall_pushback()
+        #self.attack_wall_pushback()
         self.attack_scenery_collision()
         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
 
@@ -430,7 +430,6 @@ class Player(moveable_obj.MoveableObj):
                         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
                         if throwing == True:
                             level_obj.being_thrown = True
-                            print("have fun")
 
     def attack_wall_pushback(self):
         # attack pushback

@@ -11,7 +11,7 @@ import dialog
 import player
 import ai
 import tele_ball
-import swarm
+# import swarm
 import contrail
 import screen_effects
 from enum import Enum
@@ -25,7 +25,10 @@ class App:
         self.levelSize = 16
         self.grid_size = 8
         self.sidebar_width = 0 #12 # in num tiles
-        pyxel.init(self.levelSize*self.grid_size + self.sidebar_width*self.grid_size,self.levelSize*self.grid_size+self.grid_size,fps = 60)
+        pyxel.init(
+            self.levelSize*self.grid_size + self.sidebar_width*self.grid_size,
+            self.levelSize*self.grid_size+self.grid_size,
+            fps = 60)
         pyxel.load("topdown.pyxres")
         self.startGame()
         pyxel.run(self.update, self.draw)
@@ -34,7 +37,7 @@ class App:
         self.state = AppState.INTRO
         self.levels = levels.LevelHandler([1,1])
         self.player = player.Player(1,1,self.levels)
-        #self.swarm = swarm.Swarm(self.levelSize)
+        # self.swarm = swarm.Swarm(self.levelSize)
         self.contrail = contrail.Contrail(self.player,self.levels.camera)
 
         # assign player to AI and tele ball
