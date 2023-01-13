@@ -151,8 +151,8 @@ class MoveableObj:
         # TODO: rework collision - optimize.. shouldn't need to check tile multile times
 
         [newX,newY] = self.spike_collision(newX,newY)
-        [newX,newY,tm_val] = self.wall_collision_check(newX,newY)
-        [newX,newY] = self.pit_collision_check(newX,newY,tm_val)
+        [newX,newY,col_val] = self.wall_collision_check(newX,newY)
+        [newX,newY] = self.pit_collision_check(newX,newY,col_val)
 
         return [newX,newY]
 
@@ -211,15 +211,15 @@ class MoveableObj:
         # collision on old y (allows sliding along walls)
         col_old_y = self.levels.check_tile_collision(roundX,roundOldY)
         final_col_val = col_now
-        if col_now == 0 or col_now == 3: # clear floor
+        if col_now != 1: # clear floor
             x_final = newX
             y_final = newY
-        elif col_old_x == 0 or col_old_x == 3:
+        elif col_old_x != 1:
             y_final = newY
             self.dir[0] = 0
             self.zero_attack_forces_x()
             final_col_val = col_old_x
-        elif col_old_y == 0 or col_old_y == 3:
+        elif col_old_y != 1:
             x_final = newX
             self.dir[1] = 0
             self.zero_attack_forces_y()

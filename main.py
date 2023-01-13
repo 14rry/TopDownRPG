@@ -25,8 +25,11 @@ class App:
         self.levelSize = 16
         self.grid_size = 8
         self.sidebar_width = 0 #12 # in num tiles
+
+        self.screen_width = self.levelSize*self.grid_size + self.sidebar_width*self.grid_size
+
         pyxel.init(
-            self.levelSize*self.grid_size + self.sidebar_width*self.grid_size,
+            self.screen_width,
             self.levelSize*self.grid_size+self.grid_size,
             fps = 60)
         pyxel.load("topdown.pyxres")
@@ -39,14 +42,12 @@ class App:
         self.player = player.Player(1,1,self.levels)
         # self.swarm = swarm.Swarm(self.levelSize)
         self.contrail = contrail.Contrail(self.player,self.levels.camera)
+        self.dialog = dialog.Dialog(self.grid_size)
 
         # assign player to AI and tele ball
         for lvl_obj in self.levels.level_objs:
             if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
                 lvl_obj.player = self.player
-                
-        self.dialogScreen = False
-        self.dialogText = [""]
 
         #pyxel.playm(1,0,True)
 
@@ -70,16 +71,12 @@ class App:
                 self.state = AppState.RUNNING
 
         if True: #self.state == AppState.RUNNING:
-            
-            if self.dialogScreen:
-                if pyxel.btnr(pyxel.KEY_Z):
-                    self.dialogScreen = False
-            
+                      
             [newX,newY] = self.player.move()
 
             # check if we need to change levels
             [newX,newY,did_change] = self.levels.check_for_change(round(newX),round(newY),newX,newY)            
-            [newX,newY] = self.player.check_collision(newX,newY)
+            [newX,newY,col_val] = self.player.check_collision(newX,newY)
             self.player.x = newX
             self.player.y = newY
 
@@ -96,13 +93,17 @@ class App:
                 self.contrail.clear()
 
             # check if we need to run dialog
-            roundX = round(newX)
-            roundY = round(newY)
-            tm_val = self.player.get_tilemap_value()
+            self.dialog.update(newX,newY,self.levels.level_index,col_val)
+            # if self.dialogScreen:
+            #     if pyxel.btnr(pyxel.KEY_Z):
+            #         self.dialogScreen = False
+
+            # roundX = round(newX)
+            # roundY = round(newY)
+            # tm_val = self.player.get_tilemap_value()
             
-            if tm_val == (2,1): # npc
-                self.dialogText = dialog.invoke(self.levels.level_index,roundX,roundY)
-                self.dialogScreen =  True
+            # if tm_val == (2,1): # npc
+            #     dialog.invoke(self.levels.level_index,roundX,roundY)
 
             # update non-player objects in the current level
             for level_obj in self.levels.level_objs:
@@ -129,12 +130,8 @@ class App:
         for val in self.levels.level_objs:
             val.draw()
         
-        if self.dialogScreen:
-            pyxel.rect(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,0)
-            pyxel.rectb(5,5,self.levelSize * self.grid_size - 5,self.levelSize * 2 + 5,3)
-            for textIndex in range(len(self.dialogText)):
-                pyxel.text(self.grid_size,self.grid_size*(textIndex+1),self.dialogText[textIndex],3)
-                
+        self.dialog.draw(self.screen_width)
+
         # draw health bar
         xHealth = self.player.health*self.grid_size*self.levelSize/10
         pyxel.rect(0,self.levelSize*self.grid_size,xHealth,9,8)

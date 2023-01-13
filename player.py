@@ -225,8 +225,8 @@ class Player(moveable_obj.MoveableObj):
         #[newX2,newY2] = super().check_collision(newX, newY)
         # TODO: rework collision - optimize.. shouldn't need to check tile multile times
         [newX2,newY2] = self.spike_collision(newX,newY)
-        [newX2,newY2,tm_val] = self.wall_collision_check(newX2,newY2)
-        [newX2,newY2] = self.pit_collision_check(newX2,newY2,tm_val)
+        [newX2,newY2,col_val] = self.wall_collision_check(newX2,newY2)
+        [newX2,newY2] = self.pit_collision_check(newX2,newY2,col_val)
 
         if (newX2 != newX) or (newY2 != newY): # collided
             self.grapple_mag = 0
@@ -236,9 +236,9 @@ class Player(moveable_obj.MoveableObj):
 
         # other collision checks that only apply to the player (coins)
         tm_pos = self.levels.player_pos_to_tm(round(newX),round(newY))
-        tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
+        tm_val_layer2 = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
 
-        if tm_val == tile_lookup.coin: # coin
+        if tm_val_layer2 == tile_lookup.coin: # coin
             self.money += 1
             pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
             pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
@@ -264,7 +264,7 @@ class Player(moveable_obj.MoveableObj):
         else:
             self.invuln_frames -= 1
 
-        return [newX,newY]
+        return [newX,newY,col_val]
 
     def draw(self):
         self.draw_attack()

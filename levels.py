@@ -138,22 +138,23 @@ class LevelHandler:
     # returns 1 if wall, 0 if floor, -1 if error
     def check_tile_collision(self,roundX,roundY,light_up = False):
 
-        try:    
-            return self.level_collision[roundX][roundY]
-        except (ValueError, IndexError):
-            # fall back to tm value .. this happens when changing level
-            tm_pos = self.player_pos_to_tm(roundX,roundY)
-            tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
-            #print(len(tile_lookup.collision[0]),len(tile_lookup.collision))
-            if tm_val[0] >= len(tile_lookup.collision[0]) or tm_val[1] >= len(tile_lookup.collision):
-                print('check_tile_collision lookup error out of bounds, tm_val:')
-                print(tm_val)
-                return -1
-            else:
-                tile_coll = tile_lookup.collision[tm_val[1]][tm_val[0]]
-                if tile_coll == 1 and light_up:
-                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],tile_lookup.wall_highlight)
-                return tile_coll
+        # try:    
+        #     return self.level_collision[roundX][roundY]
+        # except (ValueError, IndexError):
+        
+        # fall back to tm value .. this happens when changing level
+        tm_pos = self.player_pos_to_tm(roundX,roundY)
+        tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
+        #print(len(tile_lookup.collision[0]),len(tile_lookup.collision))
+        if tm_val[0] >= len(tile_lookup.collision[0]) or tm_val[1] >= len(tile_lookup.collision):
+            print('check_tile_collision lookup error out of bounds, tm_val:')
+            print(tm_val)
+            return -1
+        else:
+            tile_coll = tile_lookup.collision[tm_val[1]][tm_val[0]]
+            if tile_coll == 1 and light_up:
+                pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],tile_lookup.wall_highlight)
+            return tile_coll
 
     def player_pos_to_tm(self,x,y):
         return [x + (self.level_index[0]*self.screen_size),y + (self.level_index[1]*self.screen_size)]
