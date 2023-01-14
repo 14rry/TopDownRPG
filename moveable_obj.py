@@ -129,18 +129,18 @@ class MoveableObj:
         for idx,vals in enumerate(self.forces):
             self.forces[idx][1] = 0
 
-    def draw(self):
+    def draw(self,x0):
         if self.alive:
 
             if self.being_thrown:
                 pyxel.circ(
-                    self.x*8+4-self.levels.camera.x,
+                    self.x*8+4-self.levels.camera.x+x0,
                     self.y*8+4-self.levels.camera.y,
                     12,
                     10)
 
             pyxel.blt(
-                self.x*8-self.levels.camera.x,
+                self.x*8-self.levels.camera.x+x0,
                 self.y*8-self.levels.camera.y, 
                 0, 
                 self.sprite_index[0]*8,

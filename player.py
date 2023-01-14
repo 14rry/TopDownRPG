@@ -266,13 +266,13 @@ class Player(moveable_obj.MoveableObj):
 
         return [newX,newY,col_val]
 
-    def draw(self):
-        self.draw_attack()
+    def draw(self,x0):
+        self.draw_attack(x0)
 
         [sprite,lr_flip] = self.animator.get_frame_sprite(self.dir)
 
         if self.invuln_frames % 2 == 0: # flash on hit
-            pyxel.blt((self.x*8)-self.levels.camera.x,self.y*8-self.levels.camera.y,0,sprite[0]*8,sprite[1]*8,8*lr_flip,8,15)
+            pyxel.blt((self.x*8)-self.levels.camera.x+x0,self.y*8-self.levels.camera.y,0,sprite[0]*8,sprite[1]*8,8*lr_flip,8,15)
 
         # draw line showing movement for debugging
         # sx = self.x*8+4-self.levels.camera.x
@@ -350,7 +350,7 @@ class Player(moveable_obj.MoveableObj):
         self.attack_scenery_collision(dir = self.last_nonzero_dir,throwing = True)
         self.state = PlayerState.NORMAL
 
-    def draw_attack(self):
+    def draw_attack(self,x0):
         attack_color = -1
         if self.state == PlayerState.ATTACKING: #self.attack:
             attack_color = 12
@@ -365,7 +365,7 @@ class Player(moveable_obj.MoveableObj):
         if attack_color >= 0:
             [min_x,min_y,w,h] = self.get_attack_bounds()
 
-            pyxel.rect(min_x-self.levels.camera.x,
+            pyxel.rect(min_x-self.levels.camera.x+x0,
                        min_y-self.levels.camera.y,
                        w,
                        h,
@@ -373,7 +373,7 @@ class Player(moveable_obj.MoveableObj):
 
         if self.state == PlayerState.AIMING:
             # draw aim line (has to be drawn after the rectangle)
-            sx = self.x*8+4-self.levels.camera.x
+            sx = self.x*8+4-self.levels.camera.x+x0
             sy = self.y*8+4-self.levels.camera.y
             pyxel.line(sx,sy,sx+self.last_nonzero_dir[0]*16,sy+self.last_nonzero_dir[1]*16, 3)
 

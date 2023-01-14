@@ -34,18 +34,18 @@ class Ai(moveable_obj.MoveableObj):
             if self.health <= 0:
                 self.dead_frames = self.max_dead_frames
 
-    def draw(self):
+    def draw(self,x0):
         if self.dead_frames > 0:
             self.dead_frames -= 1
 
             # draw disapearing animation
             pyxel.rect(
-                self.x*8-self.levels.camera.x,
+                self.x*8-self.levels.camera.x+x0,
                 self.y*8-self.levels.camera.y, 
                 self.dead_frames,self.dead_frames,8)
 
         elif self.invuln_frames % 2 == 0:
-            super().draw()
+            super().draw(x0)
         
     def update(self):
 

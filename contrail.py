@@ -7,7 +7,7 @@ class Contrail():
         self.camera = camera
         self.trail = []
         self.ages = []
-        self.lifetime_frames = 120
+        self.lifetime_frames = 20 #120
 
         #self.color = 5
         self.color = [1,2,3]
@@ -37,20 +37,20 @@ class Contrail():
         self.trail.append([self.target.x,self.target.y])
         self.ages.append(self.lifetime_frames)
 
-        self.find_intersects()
+        #self.find_intersects()
 
-    def draw(self):
+    def draw(self,x0):
         for idx,pos in enumerate(self.trail):
             color_idx = round((self.ages[idx]/self.lifetime_frames) * (len(self.color)-1))
             #pyxel.pset(pos[0]*8+4,pos[1]*8+4,self.color)
             pyxel.circ(
-                pos[0]*8+4-self.camera.x,
+                pos[0]*8+4-self.camera.x+x0,
                 pos[1]*8+4-self.camera.y,
-                2,self.color[color_idx])
+                1.2,self.color[color_idx])
 
         for pos in self.intersect_points:
             pyxel.circ(
-                pos[0]*8+4-self.camera.x,
+                pos[0]*8+4-self.camera.x+x0,
                 pos[1]*8+4-self.camera.y,
                 4,12)
 

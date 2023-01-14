@@ -22,19 +22,32 @@ class App:
 
         self.screen_effects = screen_effects.ScreenEffects()
 
+        # level size = 16 * 8 = 128x128
+
+        # 128 at 16:9 is 227.5
+
         self.levelSize = 16
         self.grid_size = 8
         self.sidebar_width = 0 #12 # in num tiles
 
         self.screen_width = self.levelSize*self.grid_size + self.sidebar_width*self.grid_size
 
+        self.window_width = 224
+        self.game_draw_start = self.window_width/2 - self.screen_width/2
+
         pyxel.init(
-            self.screen_width,
-            self.levelSize*self.grid_size+self.grid_size,
+            self.window_width,
+            self.levelSize*self.grid_size,
             fps = 60)
+
+
         pyxel.load("topdown.pyxres")
+        pyxel.image(1).load(0,0,'resources/gamewindow.png')
+
+
         self.startGame()
         pyxel.run(self.update, self.draw)
+
         
     def startGame(self):
         self.state = AppState.INTRO
@@ -118,25 +131,25 @@ class App:
         
     def draw(self):        
         pyxel.cls(1)
+        pyxel.blt(0,0,1,0,0,224,128) # draw background
         
         # draw map
-        self.levels.draw()
+        self.levels.draw(self.game_draw_start)
 
         # draw player        
-        self.contrail.draw()
-        self.player.draw()
+        self.contrail.draw(self.game_draw_start)
+        self.player.draw(self.game_draw_start)
 
         # draw level objects
         for val in self.levels.level_objs:
-            val.draw()
+            val.draw(self.game_draw_start)
         
         self.dialog.draw(self.screen_width)
 
         # draw health bar
-        xHealth = self.player.health*self.grid_size*self.levelSize/10
-        pyxel.rect(0,self.levelSize*self.grid_size,xHealth,9,8)
-
-        pyxel.text(0,self.levelSize*self.grid_size,str(self.player.health),3)
+        # xHealth = self.player.health*self.grid_size*self.levelSize/10
+        # pyxel.rect(self.game_draw_start,self.levelSize*self.grid_size,xHealth,9,8)
+        # pyxel.text(self.game_draw_start,self.levelSize*self.grid_size,str(self.player.health),3)
 
         # self.swarm.draw()
    

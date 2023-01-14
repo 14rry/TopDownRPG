@@ -96,7 +96,6 @@ class LevelHandler:
                 except (ValueError, IndexError):
                     continue
 
-                    
 
     def check_for_change(self,roundX,roundY,newX,newY):
         new_level = [0,0]
@@ -141,7 +140,7 @@ class LevelHandler:
         # try:    
         #     return self.level_collision[roundX][roundY]
         # except (ValueError, IndexError):
-        
+
         # fall back to tm value .. this happens when changing level
         tm_pos = self.player_pos_to_tm(roundX,roundY)
         tm_val = pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1])
@@ -159,9 +158,9 @@ class LevelHandler:
     def player_pos_to_tm(self,x,y):
         return [x + (self.level_index[0]*self.screen_size),y + (self.level_index[1]*self.screen_size)]
 
-    def draw(self):
+    def draw(self,x0):
         # base layer
-        pyxel.bltm(0,0,0,
+        pyxel.bltm(x0,0,0,
             self.camera.x+self.level_index[0]*self.screen_size*self.grid_size,
             self.camera.y+self.level_index[1]*self.screen_size*self.grid_size,
             self.grid_size*self.screen_size,
@@ -169,7 +168,7 @@ class LevelHandler:
             15)
 
         # second layer sprites w/ transparency i.e. coins
-        pyxel.bltm(0,0,1,
+        pyxel.bltm(x0,0,1,
             self.camera.x+self.level_index[0]*self.screen_size*self.grid_size,
             self.camera.y+self.level_index[1]*self.screen_size*self.grid_size,
             self.grid_size*self.screen_size,
