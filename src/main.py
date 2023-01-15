@@ -15,7 +15,6 @@ import tele_ball
 import contrail
 import screen_effects
 from enum import Enum
-import particles
 import config
 
 enable_bg = False
@@ -48,8 +47,8 @@ class App:
             self.levelSize*self.grid_size,
             fps = 60)
 
-        pyxel.load("topdown.pyxres")
-        pyxel.image(1).load(0,0,'resources/gamewindow.png')
+        pyxel.load("../resources/topdown.pyxres")
+        pyxel.image(1).load(0,0,'../resources/gamewindow.png')
 
         self.startGame()
         pyxel.run(self.update, self.draw)
