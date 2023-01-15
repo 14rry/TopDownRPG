@@ -306,12 +306,12 @@ class Player(moveable_obj.MoveableObj):
 
         if pyxel.btn(pyxel.KEY_Z):
             if self.state == PlayerState.ATTACHING:
-                self.state = PlayerState.AIM_DEBOUNCING
-                self.aim_debounce = 0
-            elif self.state == PlayerState.AIM_DEBOUNCING:
-                self.aim_debounce += 1
-                if self.aim_debounce > self.aim_debounce_max:
-                    self.state = PlayerState.AIMING
+            #     self.state = PlayerState.AIM_DEBOUNCING
+            #     self.aim_debounce = 0
+            # elif self.state == PlayerState.AIM_DEBOUNCING:
+            #     self.aim_debounce += 1
+            #     if self.aim_debounce > self.aim_debounce_max:
+                self.state = PlayerState.AIMING
             elif self.state == PlayerState.AIMING:
                 self.process_aiming()
             elif (not self.state == PlayerState.ATTACKING

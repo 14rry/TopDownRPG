@@ -32,10 +32,11 @@ class ParticleEffect:
         self.type = ParticleEffectType.RADIAL
         self.x = x
         self.y = y
-        self.speed = .1
-        self.r = .1
-        self.num_pts = 8
-        self.lifetime = 600
+        self.speed = .2
+        self.r = 1
+        self.num_pts = 12
+        self.lifetime = 8
+        self.col = 8
 
         self.pts = []
 
@@ -72,11 +73,11 @@ class ParticleEffect:
 
     def draw(self,x0,camx,camy):
         for pt in self.pts:
-            pyxel.circ(
+            pyxel.circb(
                 pt.x*8-camx+x0,
                 pt.y*8-camy,
-                2,
-                3
+                self.r,
+                self.col
                 )
                 
 class Particle:

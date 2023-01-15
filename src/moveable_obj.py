@@ -122,7 +122,7 @@ class MoveableObj:
         self.x = newX
         self.y = newY
 
-        if self.health <= 0:
+        if self.health <= 0 and self.alive:
             self.alive = False
             config.particle_effects.add(particles.ParticleEffect(self.x,self.y))
 
@@ -179,7 +179,6 @@ class MoveableObj:
             self.health -= 1
             newX = self.level_start_x
             newY = self.level_start_y
-            print('ow')
 
         return [newX,newY]
 
