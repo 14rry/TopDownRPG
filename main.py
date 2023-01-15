@@ -15,6 +15,10 @@ import tele_ball
 import contrail
 import screen_effects
 from enum import Enum
+import particles
+import config
+
+enable_bg = False
 
 class App:
     def __init__(self):
@@ -23,8 +27,7 @@ class App:
         self.screen_effects = screen_effects.ScreenEffects()
 
         # level size = 16 * 8 = 128x128
-
-        # 128 at 16:9 is 227.5
+        # with background, 224x128
 
         self.levelSize = 16
         self.grid_size = 8
@@ -32,23 +35,25 @@ class App:
 
         self.screen_width = self.levelSize*self.grid_size + self.sidebar_width*self.grid_size
 
-        self.window_width = 224
-        self.game_draw_start = self.window_width/2 - self.screen_width/2
+        if enable_bg:
+
+            self.window_width = 224
+            self.game_draw_start = self.window_width/2 - self.screen_width/2
+        else:
+            self.window_width = self.screen_width
+            self.game_draw_start = 0
 
         pyxel.init(
             self.window_width,
             self.levelSize*self.grid_size,
             fps = 60)
 
-
         pyxel.load("topdown.pyxres")
         pyxel.image(1).load(0,0,'resources/gamewindow.png')
-
 
         self.startGame()
         pyxel.run(self.update, self.draw)
 
-        
     def startGame(self):
         self.state = AppState.INTRO
         self.levels = levels.LevelHandler([1,1])
@@ -63,6 +68,8 @@ class App:
                 lvl_obj.player = self.player
 
         #pyxel.playm(1,0,True)
+
+        config.init(self.levels.camera)
 
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
@@ -83,7 +90,7 @@ class App:
             if done:
                 self.state = AppState.RUNNING
 
-        if True: #self.state == AppState.RUNNING:
+        if self.state == AppState.RUNNING:
                       
             [newX,newY] = self.player.move()
 
@@ -128,10 +135,14 @@ class App:
             # self.swarm.new_pos([self.player.x*8,self.player.y*8])
             # self.swarm.update()
             self.contrail.update()
+
+            config.particle_effects.update()
         
     def draw(self):        
         pyxel.cls(1)
-        pyxel.blt(0,0,1,0,0,224,128) # draw background
+
+        if enable_bg:
+            pyxel.blt(0,0,1,0,0,224,128) # draw background
         
         # draw map
         self.levels.draw(self.game_draw_start)
@@ -152,6 +163,8 @@ class App:
         # pyxel.text(self.game_draw_start,self.levelSize*self.grid_size,str(self.player.health),3)
 
         # self.swarm.draw()
+
+        config.particle_effects.draw(self.game_draw_start)
    
     def reset(self):
         self.levels.clean_up_scenery()

@@ -29,7 +29,6 @@ class Ai(moveable_obj.MoveableObj):
         if self.invuln_frames <= 0:
             self.invuln_frames = self.max_invuln_frames
             self.health -= damage_amount
-            print('ow!')
 
             if self.health <= 0:
                 self.dead_frames = self.max_dead_frames
@@ -57,19 +56,9 @@ class Ai(moveable_obj.MoveableObj):
 
         xd = 0
         yd = 0
-        if self.player is not None:
-            xd = -pyxel.sgn(self.x - self.player.x)*self.speed
-            yd = -pyxel.sgn(self.y - self.player.y)*self.speed
+        # if self.player is not None:
+        #     xd = -pyxel.sgn(self.x - self.player.x)*self.speed
+        #     yd = -pyxel.sgn(self.y - self.player.y)*self.speed
+
         # general moveable objects collision check (spikes, walls, pits)
         super().update(xdelta = xd, ydelta = yd)
-
-    # def draw_self(self):
-    #     if not self.alive:
-    #         self.size -= 1 # shrink on death
-    #     if self.size > 0:
-    #         pyxel.rect(self.x*10,
-    #                     self.y*10,
-    #                     self.size,
-    #                     self.size,
-    #                     self.color)
-            

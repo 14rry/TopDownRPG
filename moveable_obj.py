@@ -1,6 +1,10 @@
 
 import pyxel
+import utilities
 import sound_lookup
+import ai
+import particles
+import config
 
 class MoveableObj:
     def __init__(self,x,y,levels,sprite_index = (0,0)):
@@ -40,8 +44,6 @@ class MoveableObj:
         self.boost_decay = .1
 
         # keep track of direction object is facing for drawing purposes
-        self.w_mod = 1
-        self.h_mod = 1
         self.sprite = 0
         self.sprite_index = sprite_index
 
@@ -114,12 +116,15 @@ class MoveableObj:
         if self.being_thrown: # check if we stopped moving aka stopped being thrown
             if self.x == newX and self.y == newY: # not moving
                 self.being_thrown = False
+            else:
+                self.level_obj_collision_check()
 
         self.x = newX
         self.y = newY
 
         if self.health <= 0:
             self.alive = False
+            config.particle_effects.add(particles.ParticleEffect(self.x,self.y))
 
     def zero_attack_forces_x(self):
         for idx,vals in enumerate(self.forces):
@@ -229,6 +234,12 @@ class MoveableObj:
             self.vel_x = 0
 
         return [x_final,y_final,final_col_val]
+
+    def level_obj_collision_check(self):
+        for level_obj in self.levels.level_objs:
+            if isinstance(level_obj,ai.Ai) and level_obj.alive:
+                if utilities.box_collision_detect(self.x*8,self.y*8,8,8,level_obj.x*8,level_obj.y*8,8,8) == True:
+                    level_obj.health -= 99
     
     def get_tilemap_value(self):
         tm_pos = self.levels.player_pos_to_tm(round(self.x),round(self.y))

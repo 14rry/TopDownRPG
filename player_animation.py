@@ -2,7 +2,7 @@ from enum import Enum
 import tile_lookup
 
 class PlayerAnimation():
-    def __init__(self):
+    def __init__(self,animation_states):
         self.state = PlayerAnimationState.IDLE
         self.frame = 0
         self.sub_frame = 0
@@ -11,14 +11,16 @@ class PlayerAnimation():
         self.max_repeat = 0
         self.left_right_flip = 1
 
+        self.animation_states = animation_states
         self.animation_table = []
         self.update_animation_table()
         self.sprite = self.update_sprite()
 
     # main function, returns player sprite for given animation frame
     # gets called each time player is drawn
-    def get_frame_sprite(self,dir):
-        self.update_direction(dir)
+    def get_frame_sprite(self,dir=None):
+        if dir is not None:
+            self.update_direction(dir)
         self.update_sprite()
 
         return [self.sprite,self.left_right_flip]
@@ -74,7 +76,7 @@ class PlayerAnimation():
             self.update_animation_table()
 
     def update_animation_table(self):
-        self.animation_table = tile_lookup.player[self.state]
+        self.animation_table = self.animation_states[self.state]
         self.max_frame = len(self.animation_table) - 1
         self.frame = 0
         self.sub_frame = 0

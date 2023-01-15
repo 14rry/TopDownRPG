@@ -4,6 +4,7 @@ import tile_lookup
 import moveable_obj
 import camera
 import tele_ball
+import config
 
 class LevelHandler:
     def __init__(self,lvl_idx=[1,1]):
@@ -61,6 +62,7 @@ class LevelHandler:
 
         self.camera.change_level(self.level_size,player_offset,new_level)
         self.update_level_objs()
+        config.particle_effects.destroy_all()
             
         return player_offset
 

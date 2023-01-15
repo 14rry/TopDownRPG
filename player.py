@@ -23,7 +23,7 @@ class Player(moveable_obj.MoveableObj):
         self.max_invuln_frames = 20
         self.money = 0
 
-        self.animator = player_animation.PlayerAnimation()
+        self.animator = player_animation.PlayerAnimation(tile_lookup.player_animation)
 
         # movement properties
         self.accel = .025
@@ -151,7 +151,6 @@ class Player(moveable_obj.MoveableObj):
 
         self.move_angle = self.move_angle + dir_x*5
         self.move_angle = self.move_angle % 360
-        print(self.move_angle)
 
         newX = self.x + pyxel.cos(self.move_angle)*self.vel_magnitude
         newY = self.y + pyxel.sin(self.move_angle)*self.vel_magnitude
