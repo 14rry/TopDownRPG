@@ -47,8 +47,8 @@ class App:
             self.levelSize*self.grid_size,
             fps = 60)
 
-        pyxel.load("../resources/topdown.pyxres")
-        pyxel.image(1).load(0,0,'../resources/gamewindow.png')
+        pyxel.load("resources/topdown.pyxres")
+        pyxel.image(1).load(0,0,'resources/gamewindow.png')
 
         self.startGame()
         pyxel.run(self.update, self.draw)
@@ -167,7 +167,7 @@ class App:
    
     def reset(self):
         self.levels.clean_up_scenery()
-        pyxel.load("../resources/topdown.pyxres")
+        pyxel.load("resources/topdown.pyxres")
         self.startGame()
 
 class AppState(Enum):
