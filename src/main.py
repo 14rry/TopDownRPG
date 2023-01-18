@@ -167,7 +167,7 @@ class App:
    
     def reset(self):
         self.levels.clean_up_scenery()
-        pyxel.load("topdown.pyxres")
+        pyxel.load("../resources/topdown.pyxres")
         self.startGame()
 
 class AppState(Enum):

@@ -191,6 +191,11 @@ class MoveableObj:
                 newY = self.level_start_y
                 self.health -= 1
                 pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
+
+                if self.health <= 0:
+                    self.alive = False
+                    config.particle_effects.add(particles.ParticleEffect(self.x,self.y))
+
         else:
             self.time_over_pit = 0
 
