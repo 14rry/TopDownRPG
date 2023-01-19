@@ -150,7 +150,7 @@ class MoveableObj:
                 0, 
                 self.sprite_index[0]*8,
                 self.sprite_index[1]*8,
-                8,8,15)
+                8,8,8)
 
     def check_collision(self,newX,newY):
         # TODO: rework collision - optimize.. shouldn't need to check tile multile times

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pyxel
 import moveable_obj
+import random
 
 class Ai(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels,sprite):
@@ -24,6 +25,11 @@ class Ai(moveable_obj.MoveableObj):
         self.max_dead_frames = 10
 
         self.speed = .05
+
+        # movement
+        self.max_decision_cooldown = 60
+        self.decision_cooldown = 0
+        self.move_dir = [0,0]
 
     def take_player_damage(self,damage_amount):
         if self.invuln_frames <= 0:
@@ -54,11 +60,25 @@ class Ai(moveable_obj.MoveableObj):
         if self.invuln_frames > 0:
             self.invuln_frames -= 1
 
+        self.movement_update()
+
         xd = 0
         yd = 0
         # if self.player is not None:
         #     xd = -pyxel.sgn(self.x - self.player.x)*self.speed
         #     yd = -pyxel.sgn(self.y - self.player.y)*self.speed
 
+        xd = self.move_dir[0]*self.speed
+        yd = self.move_dir[1]*self.speed
+
         # general moveable objects collision check (spikes, walls, pits)
         super().update(xdelta = xd, ydelta = yd)
+
+    def movement_update(self):
+        self.decision_cooldown -= 1
+        if self.decision_cooldown < 0:
+            self.decision_cooldown = self.max_decision_cooldown
+
+            self.move_dir = [random.randint(-1,1),random.randint(-1,1)]
+
+

@@ -138,7 +138,7 @@ class App:
             config.particle_effects.update()
         
     def draw(self):        
-        pyxel.cls(1)
+        pyxel.cls(11)
 
         if enable_bg:
             pyxel.blt(0,0,1,0,0,224,128) # draw background

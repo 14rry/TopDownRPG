@@ -167,7 +167,7 @@ class LevelHandler:
             self.camera.y+self.level_index[1]*self.screen_size*self.grid_size,
             self.grid_size*self.screen_size,
             self.grid_size*self.screen_size,
-            15)
+            8)
 
         # second layer sprites w/ transparency i.e. coins
         pyxel.bltm(x0,0,1,
@@ -175,4 +175,4 @@ class LevelHandler:
             self.camera.y+self.level_index[1]*self.screen_size*self.grid_size,
             self.grid_size*self.screen_size,
             self.grid_size*self.screen_size,
-            15)
+            8)
