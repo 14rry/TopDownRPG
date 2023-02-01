@@ -32,7 +32,7 @@ collision = [
 # special scenery object tiles
 ball = (3,4)
 ai = (3,6)
-tele_ball = (2,8)
+tele_ball = [(2,8),(3,9)]
 
 # other special tiles
 wall_highlight = (2,7)

@@ -82,7 +82,7 @@ class LevelHandler:
                 elif tm_val == tile_lookup.ai:
                     self.level_objs.append(ai.Ai(i,j,self,tm_val))
                     is_obj = True
-                elif tm_val == tile_lookup.tele_ball:
+                elif tm_val in tile_lookup.tele_ball:
                     self.level_objs.append(tele_ball.TeleBall(i,j,self,tm_val))
                     is_obj = True
 

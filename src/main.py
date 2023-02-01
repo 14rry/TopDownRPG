@@ -71,6 +71,7 @@ class App:
         config.init(self.levels.camera)
 
     def update(self):
+
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
         if pyxel.btnp(pyxel.KEY_R):

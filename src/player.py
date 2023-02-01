@@ -191,7 +191,7 @@ class Player(moveable_obj.MoveableObj):
             dir_x = self.dir[0]
             dir_y = self.dir[1]
 
-        if pyxel.btnp(pyxel.KEY_C) and self.boost <= 0:
+        if self.input_handler.btnp('sprint') and self.boost <= 0:
             self.boost = self.top_boost
             self.grapple_dir = self.last_nonzero_dir
             self.grapple_mag = self.grapple_init_mag
@@ -304,7 +304,7 @@ class Player(moveable_obj.MoveableObj):
             elif self.any_attached == False:
                 self.state = PlayerState.NORMAL
 
-        if pyxel.btn(pyxel.KEY_Z):
+        if self.input_handler.is_pressed('attach'):
             if self.state == PlayerState.ATTACHING:
             #     self.state = PlayerState.AIM_DEBOUNCING
             #     self.aim_debounce = 0
@@ -331,7 +331,7 @@ class Player(moveable_obj.MoveableObj):
                 else:
                     self.process_first_attack_frame()
 
-        if pyxel.btnp(pyxel.KEY_X):
+        if self.input_handler.btnp('attack'):
             if not self.state == PlayerState.ATTACHING: # first time on
                 self.state = PlayerState.ATTACHING
                 self.attach_debounce = 0
@@ -353,22 +353,31 @@ class Player(moveable_obj.MoveableObj):
         attack_color = -1
         if self.state == PlayerState.ATTACKING: #self.attack:
             attack_color = 12
+            tm_off = 0
         elif self.state == PlayerState.ATTACHING:
             if self.attach_debounce < self.attach_debounce_max:
                 attack_color = 13
+                tm_off = 24
             else:
                 attack_color = 11
+                tm_off = 48
         elif self.state == PlayerState.AIMING:
             attack_color = 10
+            tm_off = 24
 
         if attack_color >= 0:
             [min_x,min_y,w,h] = self.get_attack_bounds()
 
-            pyxel.rect(min_x-self.levels.camera.x+x0,
-                       min_y-self.levels.camera.y,
-                       w,
-                       h,
-                       attack_color)
+            min_x -= self.levels.camera.x+x0
+            min_y -= self.levels.camera.y
+
+            # pyxel.rect(min_x-self.levels.camera.x+x0,
+            #            min_y-self.levels.camera.y,
+            #            w,
+            #            h,
+            #            attack_color)
+
+            pyxel.blt(min_x,min_y,0,48+tm_off,0,24,24,15)
 
         if self.state == PlayerState.AIMING:
             # draw aim line (has to be drawn after the rectangle)
