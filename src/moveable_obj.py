@@ -134,7 +134,7 @@ class MoveableObj:
         for idx,vals in enumerate(self.forces):
             self.forces[idx][1] = 0
 
-    def draw(self,x0):
+    def draw(self,x0,lr_flip=1):
         if self.alive:
 
             if self.being_thrown:
@@ -150,7 +150,7 @@ class MoveableObj:
                 0, 
                 self.sprite_index[0]*8,
                 self.sprite_index[1]*8,
-                8,8,8)
+                8*lr_flip,8,8)
 
     def check_collision(self,newX,newY):
         # TODO: rework collision - optimize.. shouldn't need to check tile multile times

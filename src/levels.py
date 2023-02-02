@@ -79,7 +79,7 @@ class LevelHandler:
                 if tm_val == tile_lookup.ball:
                     self.level_objs.append(moveable_obj.MoveableObj(i,j,self,tm_val))
                     is_obj = True
-                elif tm_val == tile_lookup.ai:
+                elif tm_val in tile_lookup.ai:
                     self.level_objs.append(ai.Ai(i,j,self,tm_val))
                     is_obj = True
                 elif tm_val in tile_lookup.tele_ball:
@@ -161,6 +161,7 @@ class LevelHandler:
         return [x + (self.level_index[0]*self.screen_size),y + (self.level_index[1]*self.screen_size)]
 
     def draw(self,x0):
+
         # base layer
         pyxel.bltm(x0,0,0,
             self.camera.x+self.level_index[0]*self.screen_size*self.grid_size,

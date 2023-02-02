@@ -55,7 +55,7 @@ class App:
 
     def startGame(self):
         self.state = AppState.INTRO
-        self.levels = levels.LevelHandler([1,1])
+        self.levels = levels.LevelHandler([1,1]) #levels.LevelHandler([7,7])
         self.player = player.Player(1,1,self.levels)
         # self.swarm = swarm.Swarm(self.levelSize)
         self.contrail = contrail.Contrail(self.player,self.levels.camera)
