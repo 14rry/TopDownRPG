@@ -52,8 +52,8 @@ class Player(moveable_obj.MoveableObj):
         # attack properties
         #self.attack = False
         self.attack_frame = 0
-        self.attack_duration = 14
-        self.attack_cooldown = 14
+        self.attack_duration = 6
+        self.attack_cooldown = 18
         self.attack_cooldown_count = 0
         self.attack_knockback_force = .2 # knockback from wall
         self.attack_knockback_cooldown = 5

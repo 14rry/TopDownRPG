@@ -3,7 +3,7 @@ import pyxel
 class InputHandler:
     def __init__(self):
 
-        self.gamepad_deadzone = 8000
+        self.gamepad_deadzone = 12000
         
         self.key_map = {
             'up':[pyxel.KEY_I,pyxel.KEY_UP,pyxel.GAMEPAD1_BUTTON_DPAD_UP],

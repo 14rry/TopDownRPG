@@ -158,9 +158,9 @@ class App:
         self.dialog.draw(self.screen_width)
 
         # draw health bar
-        # xHealth = self.player.health*self.grid_size*self.levelSize/10
-        # pyxel.rect(self.game_draw_start,self.levelSize*self.grid_size,xHealth,9,8)
-        # pyxel.text(self.game_draw_start,self.levelSize*self.grid_size,str(self.player.health),3)
+        xHealth = self.player.health*self.grid_size*self.levelSize/10
+        pyxel.rect(self.game_draw_start,self.levelSize*self.grid_size-2,xHealth,2,8)
+        #pyxel.text(self.game_draw_start,self.levelSize*self.grid_size,str(self.player.health),3)
 
         # self.swarm.draw()
 
