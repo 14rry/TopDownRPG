@@ -30,12 +30,16 @@ class MoveableObj:
 
         # movement properties
         self.accel = 4
-        self.deccel = .1
+        #self.deccel = .1
         self.max_vel = -1
+        #self.min_vel = .09
         self.vel_x = 0
         self.vel_y = 0
         self.dir = [0,0]
         self.force_accel = 4
+
+        self.deccel = .05
+        self.min_vel = .051
 
         # for non-velocity movement
         self.speed = .2
@@ -48,6 +52,9 @@ class MoveableObj:
         self.sprite_index = sprite_index
 
         self.forces = [] # [xforce,yforce,cooldown]
+
+        self.invuln_frames = 0
+        self.max_invuln_frames = 20
 
     def attach(self,attachment_obj):
         self.attached_to = attachment_obj
@@ -71,17 +78,21 @@ class MoveableObj:
 
         return [newX,newY]
 
+    def take_player_damage(self,dontcare):
+        if self.invuln_frames <= 0:
+            self.invuln_frames = self.max_invuln_frames
+
     def apply_forces_with_velocity(self,newX,newY,tm_val):
         # deaccelerate
         if tm_val != (3,0):
             if self.vel_y != 0:
-                if abs(self.vel_y) < .1:
+                if abs(self.vel_y) < self.min_vel:
                     self.vel_y = 0
                 else:
                     self.vel_y -= self.deccel*pyxel.sgn(self.vel_y)
 
             if self.vel_x != 0:
-                if abs(self.vel_x) < .1:
+                if abs(self.vel_x) < self.min_vel:
                     self.vel_x = 0
                 else:
                     self.vel_x -= self.deccel*pyxel.sgn(self.vel_x)
@@ -99,6 +110,9 @@ class MoveableObj:
 
     # called from main.py on each moveable object in a level
     def update(self,xdelta = 0, ydelta = 0):
+        if self.invuln_frames > 0:
+            self.invuln_frames -= 1
+
         newX = self.x
         newY = self.y
         if self.attached_to != None:

@@ -16,7 +16,6 @@ class Ai(moveable_obj.MoveableObj):
         self.size = 9
         self.player = None
         self.health = 3
-        self.takes_player_damage = True
         self.is_attachable = False
 
         self.invuln_frames = 0
@@ -32,15 +31,18 @@ class Ai(moveable_obj.MoveableObj):
         self.max_decision_cooldown = 60
         self.decision_cooldown = 0
         self.move_dir = [0,0]
+        self.deccel = .037
+        self.min_vel = .038
 
         self.animator = player_animation.PlayerAnimation(tile_lookup.ai_animation)
         self.lr_flip = 1
 
-
     def take_player_damage(self,damage_amount):
+        print('test')
         if self.invuln_frames <= 0:
             self.invuln_frames = self.max_invuln_frames
             self.health -= damage_amount
+            self.move_dir = [0,0] # stop moving
 
             if self.health <= 0:
                 self.dead_frames = self.max_dead_frames
@@ -63,10 +65,8 @@ class Ai(moveable_obj.MoveableObj):
         if not self.alive:
             return
 
-        if self.invuln_frames > 0:
-            self.invuln_frames -= 1
-
-        self.movement_update()
+        if self.invuln_frames <= 0:
+            self.movement_update()
 
         xd = 0
         yd = 0

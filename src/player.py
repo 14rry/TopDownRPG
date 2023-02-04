@@ -18,7 +18,7 @@ class Player(moveable_obj.MoveableObj):
 
         self.health = 10
         self.ai_damage = 1 # amount of damage ai inflicts on player collision
-        self.ai_pushback = .2
+        self.ai_pushback = .08
         self.invuln_frames = 0
         self.max_invuln_frames = 20
         self.money = 0
@@ -26,11 +26,11 @@ class Player(moveable_obj.MoveableObj):
         self.animator = player_animation.PlayerAnimation(tile_lookup.player_animation)
 
         # movement properties
-        self.accel = .025
-        #self.deccel = .025
-        self.deccel = .2
-        self.max_vel = .2
-        self.min_vel = .08
+        self.accel = .1
+        self.deccel = .012 #.025
+        #self.deccel = .2
+        self.max_vel = .1
+        self.min_vel = .013
         self.move_vel_x = 0
         self.move_vel_y = 0
         self.dir = [0,0]
@@ -58,7 +58,8 @@ class Player(moveable_obj.MoveableObj):
         self.attack_knockback_force = .2 # knockback from wall
         self.attack_knockback_cooldown = 5
         self.attack_object_force = .1 # force against moveable_obj
-        self.attack_object_cooldown = 5
+        self.attack_object_cooldown = 1 #5 for non vel movement
+        self.ai_pushback_cooldown = 1
         self.wall_pushback_x = 0
         self.wall_pushback_y = 0
         self.attack_damage = 1 # amount of health subtracted from enemy on attack collision (each frame)
@@ -67,10 +68,10 @@ class Player(moveable_obj.MoveableObj):
         # attract properties
         #self.attract = False
 
-        self.aim_move_penalty = 0.08
+        self.aim_move_penalty = 0.02
         self.aim_debounce_max = 6 # z key must be held down for 5 frames to enter aim state
         self.aim_debounce = 0 
-        self.aim_vel_multiplier = 3 # how hard the objects are flung away when aiming
+        self.aim_vel_multiplier = 2 # how hard the objects are flung away when aiming
 
         self.any_attached = False
         self.attach_debounce_max = 6
@@ -204,8 +205,8 @@ class Player(moveable_obj.MoveableObj):
         if self.grapple_mag != 0:
             [newX,newY] = self.grapple_movement(dir_x,dir_y)
         else:
-            [newX,newY] = self.move_without_velocity(dir_x,dir_y)
-            #[newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
+            #[newX,newY] = self.move_without_velocity(dir_x,dir_y)
+            [newX,newY] = self.move_with_velocity(dir_x,dir_y,tm_val)
             #[newX,newY] = self.move_like_a_car(dir_x,dir_y)
 
         tm_val = self.get_tilemap_value()
@@ -258,7 +259,7 @@ class Player(moveable_obj.MoveableObj):
                         self.forces.append(
                             [dir_x*self.ai_pushback,
                             dir_y*self.ai_pushback,
-                            self.attack_object_cooldown])
+                            self.ai_pushback_cooldown])
                 
         else:
             self.invuln_frames -= 1
@@ -413,10 +414,12 @@ class Player(moveable_obj.MoveableObj):
     def attack_scenery_collision(self,dir = None,throwing = False):
         [min_x,min_y,w,h] = self.get_attack_bounds()
         for level_obj in self.levels.level_objs:
+            if level_obj.invuln_frames > 0:
+                continue # don't apply attack to already attacked ai.. might want to expand this to other objects too
+
             if level_obj.alive == True:
                 if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
-                    if level_obj.takes_player_damage == True:
-                        level_obj.take_player_damage(self.attack_damage)
+                    level_obj.take_player_damage(self.attack_damage)
                     
                     if dir is None:
                         # calculate angle between player and object and apply force in that direction
