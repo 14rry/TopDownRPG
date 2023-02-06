@@ -17,6 +17,7 @@ class Ai(moveable_obj.MoveableObj):
         self.player = None
         self.health = 3
         self.is_attachable = False
+        self.player_damage = 1
 
         self.invuln_frames = 0
         self.max_invuln_frames = 20
@@ -38,7 +39,6 @@ class Ai(moveable_obj.MoveableObj):
         self.lr_flip = 1
 
     def take_player_damage(self,damage_amount):
-        print('test')
         if self.invuln_frames <= 0:
             self.invuln_frames = self.max_invuln_frames
             self.health -= damage_amount

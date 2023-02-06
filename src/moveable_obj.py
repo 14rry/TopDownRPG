@@ -18,12 +18,14 @@ class MoveableObj:
         self.is_attachable = True
         self.attached_to = None
         self.being_thrown = False
+        self.can_be_thrown = True
 
         self.level_start_x = self.x
         self.level_start_y = self.y
         
         self.health = 1
         self.alive = True
+        self.invincible = False
 
         self.time_over_pit = 0
         self.max_time_over_pit = 6
@@ -255,7 +257,7 @@ class MoveableObj:
 
     def level_obj_collision_check(self):
         for level_obj in self.levels.level_objs:
-            if isinstance(level_obj,ai.Ai) and level_obj.alive:
+            if isinstance(level_obj,ai.Ai) and level_obj.alive and not level_obj.invincible:
                 if utilities.box_collision_detect(self.x*8,self.y*8,8,8,level_obj.x*8,level_obj.y*8,8,8) == True:
                     level_obj.health -= 99
     

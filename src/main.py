@@ -129,7 +129,7 @@ class App:
             for level_obj in self.levels.level_objs:
                 level_obj.update()
 
-            self.levels.camera.update(self.player.x,self.player.y)
+            self.levels.camera.update(self.player.x,self.player.y,self.player.dir,self.player.last_nonzero_dir)
                 
             self.player.update()
             # self.swarm.new_pos([self.player.x*8,self.player.y*8])

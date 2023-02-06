@@ -246,7 +246,7 @@ class Player(moveable_obj.MoveableObj):
         # ai collisions
         if self.invuln_frames <= 0:
             for level_obj in self.levels.level_objs:
-                if isinstance(level_obj,ai.Ai) and level_obj.alive:
+                if isinstance(level_obj,ai.Ai) and level_obj.alive and level_obj.player_damage > 0:
                     if utilities.box_collision_detect(self.x*8,self.y*8,8,8,level_obj.x*8,level_obj.y*8,8,8) == True:
                         self.health -= self.ai_damage
                         self.invuln_frames = self.max_invuln_frames
@@ -355,7 +355,11 @@ class Player(moveable_obj.MoveableObj):
         if self.state == PlayerState.ATTACKING: #self.attack:
             attack_color = 12
             tm_off = 0
+
+            [min_x,min_y,w,h] = self.get_attack_bounds()
+
         elif self.state == PlayerState.ATTACHING:
+            [min_x,min_y,w,h] = self.get_hold_bounds()
             if self.attach_debounce < self.attach_debounce_max:
                 attack_color = 13
                 tm_off = 24
@@ -363,11 +367,11 @@ class Player(moveable_obj.MoveableObj):
                 attack_color = 11
                 tm_off = 48
         elif self.state == PlayerState.AIMING:
+            [min_x,min_y,w,h] = self.get_hold_bounds()
             attack_color = 10
             tm_off = 24
 
         if attack_color >= 0:
-            [min_x,min_y,w,h] = self.get_attack_bounds()
 
             min_x -= self.levels.camera.x+x0
             min_y -= self.levels.camera.y
@@ -387,6 +391,14 @@ class Player(moveable_obj.MoveableObj):
             pyxel.line(sx,sy,sx+self.last_nonzero_dir[0]*16,sy+self.last_nonzero_dir[1]*16, 3)
 
     def get_attack_bounds(self):
+        min_x = 8*(self.x-1)+self.last_nonzero_dir[0]*6
+        min_y = 8*(self.y-1)+self.last_nonzero_dir[1]*6
+        w = 8*3
+        h = 8*3
+
+        return [min_x,min_y,w,h]
+
+    def get_hold_bounds(self):
         min_x = 8*(self.x-1)
         min_y = 8*(self.y-1)
         w = 8*3
@@ -414,7 +426,7 @@ class Player(moveable_obj.MoveableObj):
     def attack_scenery_collision(self,dir = None,throwing = False):
         [min_x,min_y,w,h] = self.get_attack_bounds()
         for level_obj in self.levels.level_objs:
-            if level_obj.invuln_frames > 0:
+            if level_obj.invuln_frames > 0 or level_obj.invincible:
                 continue # don't apply attack to already attacked ai.. might want to expand this to other objects too
 
             if level_obj.alive == True:
@@ -440,7 +452,8 @@ class Player(moveable_obj.MoveableObj):
                     if not (dir_x == 0 and dir_y == 0): # don't play sound if player let go of aim direction
                         pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
                         if throwing == True:
-                            level_obj.being_thrown = True
+                            if level_obj.can_be_thrown:
+                                level_obj.being_thrown = True
 
     def attack_wall_pushback(self):
         # attack pushback

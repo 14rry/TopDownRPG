@@ -33,6 +33,7 @@ collision = [
 ball = (3,4)
 ai = [(3,6),(4,6),(5,6)]
 tele_ball = [(2,8),(3,9)]
+doggy = (4,4)
 
 # other special tiles
 wall_highlight = (2,7)

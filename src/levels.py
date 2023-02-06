@@ -5,6 +5,7 @@ import moveable_obj
 import camera
 import tele_ball
 import config
+import doggy
 
 class LevelHandler:
     def __init__(self,lvl_idx=[1,1]):
@@ -31,7 +32,11 @@ class LevelHandler:
                 tm_pos = self.player_pos_to_tm(round(lvl_obj.x),round(lvl_obj.y))
                 pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],lvl_obj.sprite_index)
             else:
-                new_lvl_objs.append(lvl_obj)
+                if isinstance(lvl_obj.attached_to,doggy.Doggy):
+                    tm_pos = self.player_pos_to_tm(round(lvl_obj.x),round(lvl_obj.y))
+                    pyxel.tilemap(1).pset(tm_pos[0]+1,tm_pos[1],lvl_obj.sprite_index) # offset x pos by 1 to avoid overwriting doggy
+                else:
+                    new_lvl_objs.append(lvl_obj)
 
         return new_lvl_objs
 
@@ -84,6 +89,9 @@ class LevelHandler:
                     is_obj = True
                 elif tm_val in tile_lookup.tele_ball:
                     self.level_objs.append(tele_ball.TeleBall(i,j,self,tm_val))
+                    is_obj = True
+                elif tm_val == tile_lookup.doggy:
+                    self.level_objs.append(doggy.Doggy(i,j,self,tm_val))
                     is_obj = True
 
                 if is_obj == True:
