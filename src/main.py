@@ -16,6 +16,7 @@ import contrail
 import screen_effects
 from enum import Enum
 import config
+import sound_lookup
 
 enable_bg = False
 
@@ -71,6 +72,10 @@ class App:
         config.init(self.levels.camera)
 
     def update(self):
+
+        if config.screen_pause_frames > 0:
+            config.screen_pause_frames -= 1
+            return
 
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
@@ -137,6 +142,8 @@ class App:
             self.contrail.update()
 
             config.particle_effects.update()
+
+            sound_lookup.update()
         
     def draw(self):        
         pyxel.cls(11)

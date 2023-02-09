@@ -206,7 +206,8 @@ class MoveableObj:
                 newX = self.level_start_x
                 newY = self.level_start_y
                 self.health -= 1
-                pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
+                sound_lookup.sfx_queue.insert(0,sound_lookup.fall_in_pit)
+                #pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
 
                 if self.health <= 0:
                     self.alive = False
