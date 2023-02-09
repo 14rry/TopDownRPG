@@ -10,8 +10,8 @@ class InputHandler:
             'down':[pyxel.KEY_K,pyxel.KEY_DOWN,pyxel.GAMEPAD1_BUTTON_DPAD_DOWN],
             'left':[pyxel.KEY_J,pyxel.KEY_LEFT,pyxel.GAMEPAD1_BUTTON_DPAD_LEFT,pyxel.GAMEPAD1_AXIS_LEFTX],
             'right':[pyxel.KEY_L,pyxel.KEY_RIGHT,pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT],
-            'attach':[pyxel.KEY_Z,pyxel.GAMEPAD1_BUTTON_A],
-            'attack':[pyxel.KEY_X,pyxel.GAMEPAD1_BUTTON_B],
+            'attach':[pyxel.KEY_Z,pyxel.GAMEPAD1_BUTTON_B],
+            'attack':[pyxel.KEY_X,pyxel.GAMEPAD1_BUTTON_A],
             'sprint':[pyxel.KEY_C,pyxel.GAMEPAD1_BUTTON_X]
         }
 

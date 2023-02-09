@@ -30,7 +30,7 @@ class Ai(moveable_obj.MoveableObj):
 
         # movement
         self.max_decision_cooldown = 60
-        self.decision_cooldown = 0
+        self.decision_cooldown = pyxel.rndi(0,60)
         self.move_dir = [0,0]
         self.deccel = .037
         self.min_vel = .038

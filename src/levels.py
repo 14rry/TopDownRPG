@@ -34,7 +34,7 @@ class LevelHandler:
             else:
                 if isinstance(lvl_obj.attached_to,doggy.Doggy):
                     tm_pos = self.player_pos_to_tm(round(lvl_obj.x),round(lvl_obj.y))
-                    pyxel.tilemap(1).pset(tm_pos[0]+1,tm_pos[1],lvl_obj.sprite_index) # offset x pos by 1 to avoid overwriting doggy
+                    pyxel.tilemap(1).pset(tm_pos[0]+1,tm_pos[1]+1,lvl_obj.sprite_index) # offset x pos by 1 to avoid overwriting doggy.. clunky solution
                 else:
                     new_lvl_objs.append(lvl_obj)
 
