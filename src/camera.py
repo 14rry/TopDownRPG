@@ -11,7 +11,7 @@ class Camera():
         self.grid_size = 8
 
         # player lookahead stuff
-        self.player_lookahead_effect = [3,3]
+        self.player_lookahead_effect = [3.2,3.2]
 
     # offset is [x,y] for where the 'far left' position should be
     def change_level(self,level_size,player_offset,change_dir):

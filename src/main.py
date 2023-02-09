@@ -50,9 +50,11 @@ class App:
 
         pyxel.load("resources/topdown.pyxres")
         pyxel.image(1).load(0,0,'resources/gamewindow.png')
+        sound_lookup.set_volumes()
 
         self.startGame()
         pyxel.run(self.update, self.draw)
+
 
     def startGame(self):
         self.state = AppState.INTRO

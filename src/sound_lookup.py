@@ -2,6 +2,8 @@ import pyxel
 
 # sound lookup
 sfx_ch = 3
+sfx_min_sound = 48 # below 48, sounds are for music
+
 player_attack = 63
 player_attack_hit_wall = 62
 player_attack_hit_obj = 61
@@ -15,12 +17,31 @@ player_take_damage = 56
 
 drum_track = 13
 
-footstep_freq = 4 # play new footstep every 4 frames while walking
-
 note_lookup = ['C2','E-2','F2','F#2','G2','B-2']
 #note_lookup = ['C3','E-4','F4','F#4','G4','B-4']
 
 sfx_queue = []
+
+def set_volumes():
+    # flaw with this approach: sounds can only be flat levels
+    set_music_volume(2,1)
+    set_sfx_volume(1)
+
+def set_music_volume(vol,music_num):
+    for sound_num in range(0,sfx_min_sound):
+        set_sound_volume(sound_num,vol)
+
+def set_sfx_volume(vol):
+    for sound_num in range(sfx_min_sound,64):
+        set_sound_volume(sound_num,vol)
+
+def set_sound_volume(sound_num,vol):
+    sound_len = len(pyxel.sound(sound_num).notes)
+    vol_str = ""
+    for i in range(sound_len):
+        vol_str += str(vol)
+
+    pyxel.sound(sound_num).set_volumes(vol_str)
 
 def update():
     if len(sfx_queue) > 0 and pyxel.play_pos(sfx_ch) is None:
