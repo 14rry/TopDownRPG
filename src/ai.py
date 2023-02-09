@@ -40,6 +40,8 @@ class Ai(moveable_obj.MoveableObj):
         self.animator = player_animation.PlayerAnimation(tile_lookup.ai_animation)
         self.lr_flip = 1
 
+        self.screen_freeze_amount = 8
+
     def take_player_damage(self,damage_amount):
         if self.invuln_frames <= 0:
             self.invuln_frames = self.max_invuln_frames
@@ -71,7 +73,7 @@ class Ai(moveable_obj.MoveableObj):
         if self.health <= 0:
             sound_lookup.sfx_queue.insert(0,sound_lookup.ai_destroy)
             #pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
-            config.screen_pause_frames = 8
+            config.screen_pause_frames = self.screen_freeze_amount
             self.dead_frames = self.max_dead_frames
 
         if self.invuln_frames <= 0:

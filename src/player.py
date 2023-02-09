@@ -454,7 +454,8 @@ class Player(moveable_obj.MoveableObj):
                         self.attack_object_cooldown])
                     
                     if not (dir_x == 0 and dir_y == 0): # don't play sound if player let go of aim direction
-                        sound_lookup.sfx_queue.insert(0,sound_lookup.player_attack_hit_obj)
+                        if not isinstance(level_obj,ai.Ai):
+                            sound_lookup.sfx_queue.insert(0,sound_lookup.player_attack_hit_obj)
                         #pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
                         if throwing == True:
                             if level_obj.can_be_thrown:
