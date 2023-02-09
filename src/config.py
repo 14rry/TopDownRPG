@@ -9,5 +9,5 @@ def init(camera):
     global screen_pause_frames
     screen_pause_frames = 0
 
-    global input_handler
-    input_handler = input_handler.InputHandler()
+    global input
+    input = input_handler.InputHandler()

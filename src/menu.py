@@ -18,7 +18,7 @@ cursor_pos = 0
 max_cursor_pos = 0
 
 def update():
-    if config.input_handler.btnp('menu'):
+    if config.input.btnp('menu'):
         global menu_state
         if menu_state == MenuState.SETTINGS:
             menu_state = MenuState.CLOSED
@@ -27,7 +27,7 @@ def update():
 
     if menu_state != MenuState.CLOSED:
         global cursor_pos
-        dir = config.input_handler.get_directional_input_btnp()
+        dir = config.input.get_directional_input_btnp()
 
         if dir[1] == 1:
             cursor_pos = min(cursor_pos+1,max_cursor_pos)

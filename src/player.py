@@ -170,7 +170,7 @@ class Player(moveable_obj.MoveableObj):
         tm_val = self.get_tilemap_value()
 
         if tm_val != (3,0):
-            (dir_x,dir_y) = config.input_handler.get_directional_input()
+            (dir_x,dir_y) = config.input.get_directional_input()
 
             # account for faster diagonals
             if (dir_y != 0 and dir_x != 0):
@@ -185,7 +185,7 @@ class Player(moveable_obj.MoveableObj):
             dir_x = self.dir[0]
             dir_y = self.dir[1]
 
-        if config.input_handler.btnp('sprint') and self.boost <= 0:
+        if config.input.btnp('sprint') and self.boost <= 0:
             self.boost = self.top_boost
             self.grapple_dir = self.last_nonzero_dir
             self.grapple_mag = self.grapple_init_mag
@@ -301,7 +301,7 @@ class Player(moveable_obj.MoveableObj):
             elif self.any_attached == False:
                 self.state = PlayerState.NORMAL
 
-        if config.input_handler.is_pressed('attach'):
+        if config.input.is_pressed('attach'):
             if self.state == PlayerState.ATTACHING:
             #     self.state = PlayerState.AIM_DEBOUNCING
             #     self.aim_debounce = 0
@@ -328,7 +328,7 @@ class Player(moveable_obj.MoveableObj):
                 else:
                     self.process_first_attack_frame()
 
-        if config.input_handler.btnp('attack'):
+        if config.input.btnp('attack'):
             if not self.state == PlayerState.ATTACHING: # first time on
                 self.state = PlayerState.ATTACHING
                 self.attach_debounce = 0
