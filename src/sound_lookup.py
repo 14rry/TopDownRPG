@@ -21,19 +21,34 @@ note_lookup = ['C2','E-2','F2','F#2','G2','B-2']
 #note_lookup = ['C3','E-4','F4','F#4','G4','B-4']
 
 sfx_queue = []
+music_volume = 0
+sfx_volume = 0
 
 def set_volumes():
     # flaw with this approach: sounds can only be flat levels
-    set_music_volume(2,1)
+    set_music_volume(3)
     set_sfx_volume(1)
 
-def set_music_volume(vol,music_num):
+def set_music_volume(vol):
+    if vol < 0 or vol > 7:
+        return
     for sound_num in range(0,sfx_min_sound):
         set_sound_volume(sound_num,vol)
+    
+    global music_volume
+    music_volume = vol
+
+    if vol > 0:
+        pyxel.playm(1,0,True)
 
 def set_sfx_volume(vol):
+    if vol < 0 or vol > 7:
+        return
     for sound_num in range(sfx_min_sound,64):
         set_sound_volume(sound_num,vol)
+
+    global sfx_volume
+    sfx_volume = vol
 
 def set_sound_volume(sound_num,vol):
     sound_len = len(pyxel.sound(sound_num).notes)

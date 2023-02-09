@@ -1,5 +1,6 @@
 
 import particles
+import input_handler
 
 def init(camera):
     global particle_effects
@@ -7,3 +8,6 @@ def init(camera):
 
     global screen_pause_frames
     screen_pause_frames = 0
+
+    global input_handler
+    input_handler = input_handler.InputHandler()

@@ -17,6 +17,7 @@ import screen_effects
 from enum import Enum
 import config
 import sound_lookup
+import menu
 
 enable_bg = False
 
@@ -51,6 +52,7 @@ class App:
         pyxel.load("resources/topdown.pyxres")
         pyxel.image(1).load(0,0,'resources/gamewindow.png')
         sound_lookup.set_volumes()
+        pyxel.playm(1,0,True)
 
         self.startGame()
         pyxel.run(self.update, self.draw)
@@ -69,8 +71,6 @@ class App:
             if isinstance(lvl_obj,ai.Ai) or isinstance(lvl_obj,tele_ball.TeleBall):
                 lvl_obj.player = self.player
 
-        #pyxel.playm(1,0,True)
-
         config.init(self.levels.camera)
 
     def update(self):
@@ -83,13 +83,13 @@ class App:
             pyxel.quit()
         if pyxel.btnp(pyxel.KEY_R):
             self.reset()
-        if pyxel.btnp(pyxel.KEY_M):
-            if self.playing_music:
-                pyxel.stop()
-                self.playing_music = False
-            else:
-                pyxel.playm(1,0,True)
-                self.playing_music = True
+        # if pyxel.btnp(pyxel.KEY_M):
+        #     if self.playing_music:
+        #         pyxel.stop()
+        #         self.playing_music = False
+        #     else:
+        #         pyxel.playm(1,0,True)
+        #         self.playing_music = True
 
         if self.state == AppState.INTRO:
             done = self.screen_effects.fade_in()
@@ -146,6 +146,9 @@ class App:
             config.particle_effects.update()
 
             sound_lookup.update()
+            menu.update()
+
+
         
     def draw(self):        
         pyxel.cls(11)
@@ -174,6 +177,7 @@ class App:
         # self.swarm.draw()
 
         config.particle_effects.draw(self.game_draw_start)
+        menu.draw()
    
     def reset(self):
         self.levels.clean_up_scenery()

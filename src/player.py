@@ -6,7 +6,7 @@ import tile_lookup
 import ai
 from enum import Enum
 import player_animation
-import input_handler
+import config
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -14,7 +14,7 @@ class Player(moveable_obj.MoveableObj):
         #
         # overwrite defaults on inherrited properties
         #
-        self.input_handler = input_handler.InputHandler()
+        
 
         self.health = 10
         self.ai_damage = 1 # amount of damage ai inflicts on player collision
@@ -170,14 +170,7 @@ class Player(moveable_obj.MoveableObj):
         tm_val = self.get_tilemap_value()
 
         if tm_val != (3,0):
-            if self.input_handler.is_pressed('right'):
-                dir_x += 1
-            if self.input_handler.is_pressed('left'):
-                dir_x -= 1
-            if self.input_handler.is_pressed('up'):
-                dir_y -= 1
-            if self.input_handler.is_pressed('down'):
-                dir_y += 1
+            (dir_x,dir_y) = config.input_handler.get_directional_input()
 
             # account for faster diagonals
             if (dir_y != 0 and dir_x != 0):
@@ -192,7 +185,7 @@ class Player(moveable_obj.MoveableObj):
             dir_x = self.dir[0]
             dir_y = self.dir[1]
 
-        if self.input_handler.btnp('sprint') and self.boost <= 0:
+        if config.input_handler.btnp('sprint') and self.boost <= 0:
             self.boost = self.top_boost
             self.grapple_dir = self.last_nonzero_dir
             self.grapple_mag = self.grapple_init_mag
@@ -308,7 +301,7 @@ class Player(moveable_obj.MoveableObj):
             elif self.any_attached == False:
                 self.state = PlayerState.NORMAL
 
-        if self.input_handler.is_pressed('attach'):
+        if config.input_handler.is_pressed('attach'):
             if self.state == PlayerState.ATTACHING:
             #     self.state = PlayerState.AIM_DEBOUNCING
             #     self.aim_debounce = 0
@@ -335,7 +328,7 @@ class Player(moveable_obj.MoveableObj):
                 else:
                     self.process_first_attack_frame()
 
-        if self.input_handler.btnp('attack'):
+        if config.input_handler.btnp('attack'):
             if not self.state == PlayerState.ATTACHING: # first time on
                 self.state = PlayerState.ATTACHING
                 self.attach_debounce = 0
