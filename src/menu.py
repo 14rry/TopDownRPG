@@ -7,7 +7,7 @@ class MenuState(Enum):
     CLOSED = 0
     SETTINGS = 1
 
-menu_state = MenuState.SETTINGS
+menu_state = MenuState.CLOSED
 settings_menu_text = ['Settings','Music','SFX']
 
 padding = 12

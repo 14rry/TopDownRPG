@@ -40,6 +40,8 @@ def set_music_volume(vol):
 
     if vol > 0:
         pyxel.playm(1,0,True)
+    else:
+        pyxel.stop()
 
 def set_sfx_volume(vol):
     if vol < 0 or vol > 7:
