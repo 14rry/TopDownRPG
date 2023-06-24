@@ -22,6 +22,7 @@ class Player(moveable_obj.MoveableObj):
         self.invuln_frames = 0
         self.max_invuln_frames = 20
         self.money = 0
+        self.pit_damage = 1
 
         self.animator = player_animation.PlayerAnimation(tile_lookup.player_animation)
 
@@ -106,6 +107,10 @@ class Player(moveable_obj.MoveableObj):
 
             self.move_vel_x = max(min(self.move_vel_x,self.max_vel),-self.max_vel)
             self.move_vel_y = max(min(self.move_vel_y,self.max_vel),-self.max_vel)
+
+            if self.state == PlayerState.AIMING:
+                self.move_vel_x = max(min(self.move_vel_x,self.aim_move_penalty),-self.aim_move_penalty)
+                self.move_vel_y = max(min(self.move_vel_y,self.aim_move_penalty),-self.aim_move_penalty)
 
             # boost
             # self.vel_x += dir_x * self.boost

@@ -29,6 +29,7 @@ class MoveableObj:
 
         self.time_over_pit = 0
         self.max_time_over_pit = 6
+        self.pit_damage = 0
 
         # movement properties
         self.accel = 4
@@ -111,7 +112,7 @@ class MoveableObj:
         return [newX,newY]
 
     # called from main.py on each moveable object in a level
-    def update(self,xdelta = 0, ydelta = 0):
+    def update(self,xdelta = 0, ydelta = 0, avoids_pits = False):
         if self.invuln_frames > 0:
             self.invuln_frames -= 1
 
@@ -126,8 +127,15 @@ class MoveableObj:
         #[newX,newY] = self.apply_forces(newX,newY,tm_val)
         newX += xdelta
         newY += ydelta
-        [newX,newY] = self.apply_forces_with_velocity(newX,newY,tm_val)
-        [newX,newY] = self.check_collision(newX,newY)
+        [newX_2,newY_2] = self.apply_forces_with_velocity(newX,newY,tm_val)
+
+        if newX_2 != newX or newY_2 != newY: # external force affected movement, allow falling in pits
+            avoids_pits = False
+
+        newX = newX_2
+        newY = newY_2
+
+        [newX,newY] = self.check_collision(newX,newY,avoids_pits)
 
         if self.being_thrown: # check if we stopped moving aka stopped being thrown
             if self.x == newX and self.y == newY: # not moving
@@ -168,11 +176,11 @@ class MoveableObj:
                 self.sprite_index[1]*8,
                 8*lr_flip,8,8)
 
-    def check_collision(self,newX,newY):
+    def check_collision(self,newX,newY,avoids_pits = False):
         # TODO: rework collision - optimize.. shouldn't need to check tile multile times
 
         [newX,newY] = self.spike_collision(newX,newY)
-        [newX,newY,col_val] = self.wall_collision_check(newX,newY)
+        [newX,newY,col_val] = self.wall_collision_check(newX,newY,avoids_pits=avoids_pits)
         [newX,newY] = self.pit_collision_check(newX,newY,col_val)
 
         return [newX,newY]
@@ -205,7 +213,7 @@ class MoveableObj:
                 self.attached_to = None
                 newX = self.level_start_x
                 newY = self.level_start_y
-                self.health -= 1
+                self.health -= self.pit_damage
                 pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
 
                 if self.health <= 0:
@@ -217,7 +225,7 @@ class MoveableObj:
 
         return [newX,newY]
 
-    def wall_collision_check(self,newX,newY,offset=0):
+    def wall_collision_check(self,newX,newY,offset=0,avoids_pits = False):
 
         x_final = self.x
         y_final = self.y
@@ -236,15 +244,15 @@ class MoveableObj:
         # collision on old y (allows sliding along walls)
         col_old_y = self.levels.check_tile_collision(roundX,roundOldY)
         final_col_val = col_now
-        if col_now != 1: # clear floor
+        if not self.is_wall(col_now,avoids_pits): # clear floor
             x_final = newX
             y_final = newY
-        elif col_old_x != 1:
+        elif not self.is_wall(col_old_x,avoids_pits):
             y_final = newY
             self.dir[0] = 0
             self.zero_attack_forces_x()
             final_col_val = col_old_x
-        elif col_old_y != 1:
+        elif not self.is_wall(col_old_y,avoids_pits):
             x_final = newX
             self.dir[1] = 0
             self.zero_attack_forces_y()
@@ -254,6 +262,9 @@ class MoveableObj:
             self.vel_x = 0
 
         return [x_final,y_final,final_col_val]
+
+    def is_wall(self,col_val,avoids_pits):
+        return col_val == 1 or (avoids_pits and col_val == 3)
 
     def level_obj_collision_check(self):
         for level_obj in self.levels.level_objs:

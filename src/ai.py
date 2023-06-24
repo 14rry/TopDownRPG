@@ -21,6 +21,7 @@ class Ai(moveable_obj.MoveableObj):
 
         self.invuln_frames = 0
         self.max_invuln_frames = 20
+        self.pit_damage = 20
 
         # for death animation
         self.dead_frames = 0
@@ -78,7 +79,7 @@ class Ai(moveable_obj.MoveableObj):
         yd = self.move_dir[1]*self.speed
 
         # general moveable objects collision check (spikes, walls, pits)
-        super().update(xdelta = xd, ydelta = yd)
+        super().update(xdelta = xd, ydelta = yd, avoids_pits = True) # avoids pits if no external force
 
         [self.sprite_index,self.lr_flip] = self.animator.get_frame_sprite(self.move_dir)
 
