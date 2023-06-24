@@ -12,7 +12,7 @@ class Doggy(ai.Ai):
         self.known_balls = []
         self.target_ball = None
         self.can_be_thrown = False
-        self.ball_min_distance = 1
+        self.ball_min_distance = .9
         self.wait_frames = 60 # how long to wait after retrieving
 
         self.player_damage = 0

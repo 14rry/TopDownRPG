@@ -7,16 +7,11 @@ class Camera():
         self.max_x = 0
         self.max_y = 0
         self.screen_size = screen_size
-        self.lerp_rate = 1 #.1
+        self.lerp_rate = .06 #.1
         self.grid_size = 8
 
         # player lookahead stuff
-        self.prev_player_dir = [0,0]
-        self.player_same_dir_frames = [0,0] # how many frames player has been in same direction
-        self.player_same_dir_max_frames = 20 # how long player must be moving same direction for lookahead to start
-        self.player_lookahead_rate = .1
-        self.player_lookahead_effect = [0,0]
-        self.player_lookahead_effect_max = 4 # how far camera moves ahead in direction player is looking in number of tiles
+        self.player_lookahead_effect = [3.2,3.2]
 
     # offset is [x,y] for where the 'far left' position should be
     def change_level(self,level_size,player_offset,change_dir):
@@ -35,31 +30,8 @@ class Camera():
         print(self.max_x)
             
     def update_player_lookahead(self,pdir):
-
-        print(pdir,self.player_same_dir_frames,self.player_lookahead_effect)
-        bdir = [0,0]
-        for d in range(2): # check each dimension, x and y
-            
-            # handle .7 case of dir
-            if pdir[d] > 0:
-                bdir[d] = 1
-            elif pdir[d] < 0:
-                bdir[d] = -1
-            else:
-                bdir[d] = 0
-
-            if bdir[d] != self.prev_player_dir[d] or bdir[d] == 0:
-                self.player_same_dir_frames[d] = 0
-                self.prev_player_dir[d] = bdir[d]
-                self.player_lookahead_effect[d] -= self.player_lookahead_rate
-                self.player_lookahead_effect[d] = max(0,self.player_lookahead_effect[d])
-                continue
-
-            if self.player_same_dir_frames[d] >= self.player_same_dir_max_frames: # start lookahead
-                self.player_lookahead_effect[d] += self.player_lookahead_rate
-                self.player_lookahead_effect[d] = min(self.player_lookahead_effect[d],self.player_lookahead_effect_max)
-            else:
-                self.player_same_dir_frames[d] += 1            
+        #TODO: account for diagonals higher magnitude
+        return        
 
     # take player x,y pos and update camera accordingly
     def update(self,px,py,pdir,lookdir):

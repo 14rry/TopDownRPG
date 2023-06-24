@@ -6,7 +6,7 @@ import tile_lookup
 import ai
 from enum import Enum
 import player_animation
-import input_handler
+import config
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -14,7 +14,7 @@ class Player(moveable_obj.MoveableObj):
         #
         # overwrite defaults on inherrited properties
         #
-        self.input_handler = input_handler.InputHandler()
+        
 
         self.health = 10
         self.ai_damage = 1 # amount of damage ai inflicts on player collision
@@ -175,14 +175,7 @@ class Player(moveable_obj.MoveableObj):
         tm_val = self.get_tilemap_value()
 
         if tm_val != (3,0):
-            if self.input_handler.is_pressed('right'):
-                dir_x += 1
-            if self.input_handler.is_pressed('left'):
-                dir_x -= 1
-            if self.input_handler.is_pressed('up'):
-                dir_y -= 1
-            if self.input_handler.is_pressed('down'):
-                dir_y += 1
+            (dir_x,dir_y) = config.input.get_directional_input()
 
             # account for faster diagonals
             if (dir_y != 0 and dir_x != 0):
@@ -197,11 +190,12 @@ class Player(moveable_obj.MoveableObj):
             dir_x = self.dir[0]
             dir_y = self.dir[1]
 
-        if self.input_handler.btnp('sprint') and self.boost <= 0:
+        if config.input.btnp('sprint') and self.boost <= 0:
             self.boost = self.top_boost
             self.grapple_dir = self.last_nonzero_dir
             self.grapple_mag = self.grapple_init_mag
-            pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
+            sound_lookup.sfx_queue.insert(0,sound_lookup.player_dash)
+            #pyxel.play(sound_lookup.sfx_ch,sound_lookup.player_dash)
 
         if self.state == PlayerState.AIMING:
             dir_x = dir_x * self.aim_move_penalty
@@ -246,7 +240,8 @@ class Player(moveable_obj.MoveableObj):
         if tm_val_layer2 == tile_lookup.coin: # coin
             self.money += 1
             pyxel.tilemap(1).pset(tm_pos[0],tm_pos[1],tile_lookup.transparent)
-            pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
+            sound_lookup.sfx_queue.insert(0,sound_lookup.coin)
+            #pyxel.play(sound_lookup.sfx_ch,sound_lookup.coin)
 
         # ai collisions
         if self.invuln_frames <= 0:
@@ -255,6 +250,7 @@ class Player(moveable_obj.MoveableObj):
                     if utilities.box_collision_detect(self.x*8,self.y*8,8,8,level_obj.x*8,level_obj.y*8,8,8) == True:
                         self.health -= self.ai_damage
                         self.invuln_frames = self.max_invuln_frames
+                        sound_lookup.sfx_queue.append(sound_lookup.player_take_damage)
 
                         # player knockback
                         angle = pyxel.atan2(self.y-level_obj.y,self.x-level_obj.x)
@@ -310,7 +306,7 @@ class Player(moveable_obj.MoveableObj):
             elif self.any_attached == False:
                 self.state = PlayerState.NORMAL
 
-        if self.input_handler.is_pressed('attach'):
+        if config.input.is_pressed('attach'):
             if self.state == PlayerState.ATTACHING:
             #     self.state = PlayerState.AIM_DEBOUNCING
             #     self.aim_debounce = 0
@@ -337,7 +333,7 @@ class Player(moveable_obj.MoveableObj):
                 else:
                     self.process_first_attack_frame()
 
-        if self.input_handler.btnp('attack'):
+        if config.input.btnp('attack'):
             if not self.state == PlayerState.ATTACHING: # first time on
                 self.state = PlayerState.ATTACHING
                 self.attach_debounce = 0
@@ -418,7 +414,8 @@ class Player(moveable_obj.MoveableObj):
         # do stuff that only happens on first attack frame
         #self.attack_wall_pushback()
         self.attack_scenery_collision()
-        pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
+        sound_lookup.sfx_queue.append(sound_lookup.player_attack) # append instead of insert so that sound plays immediately
+        #pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack)
 
     def process_attack(self):
         if pyxel.frame_count - self.attack_frame > self.attack_duration:
@@ -455,7 +452,9 @@ class Player(moveable_obj.MoveableObj):
                         self.attack_object_cooldown])
                     
                     if not (dir_x == 0 and dir_y == 0): # don't play sound if player let go of aim direction
-                        pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
+                        if not isinstance(level_obj,ai.Ai):
+                            sound_lookup.sfx_queue.insert(0,sound_lookup.player_attack_hit_obj)
+                        #pyxel.play(sound_lookup.sfx_ch, sound_lookup.player_attack_hit_obj)
                         if throwing == True:
                             if level_obj.can_be_thrown:
                                 level_obj.being_thrown = True
@@ -497,7 +496,7 @@ class Player(moveable_obj.MoveableObj):
             self.forces.append(
                 [self.wall_pushback_x,self.wall_pushback_y,
                 self.attack_knockback_cooldown+20])
-            pyxel.play(2, sound_lookup.player_attack_hit_wall)
+            #pyxel.play(2, sound_lookup.player_attack_hit_wall)
 
     def attract_objects(self):
         # any object within range should follow player movement

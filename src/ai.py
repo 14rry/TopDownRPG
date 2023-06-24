@@ -4,6 +4,8 @@ import moveable_obj
 import random
 import tile_lookup
 import player_animation
+import config
+import sound_lookup
 
 class Ai(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels,sprite):
@@ -31,7 +33,7 @@ class Ai(moveable_obj.MoveableObj):
 
         # movement
         self.max_decision_cooldown = 60
-        self.decision_cooldown = 0
+        self.decision_cooldown = pyxel.rndi(0,60)
         self.move_dir = [0,0]
         self.deccel = .037
         self.min_vel = .038
@@ -39,14 +41,17 @@ class Ai(moveable_obj.MoveableObj):
         self.animator = player_animation.PlayerAnimation(tile_lookup.ai_animation)
         self.lr_flip = 1
 
+        self.screen_freeze_amount = 8
+
     def take_player_damage(self,damage_amount):
         if self.invuln_frames <= 0:
             self.invuln_frames = self.max_invuln_frames
             self.health -= damage_amount
             self.move_dir = [0,0] # stop moving
 
-            if self.health <= 0:
-                self.dead_frames = self.max_dead_frames
+            if self.health > 0:
+                sound_lookup.sfx_queue.insert(0,sound_lookup.player_attack_hit_ai)
+
 
     def draw(self,x0):
         if self.dead_frames > 0:
@@ -65,6 +70,12 @@ class Ai(moveable_obj.MoveableObj):
 
         if not self.alive:
             return
+
+        if self.health <= 0:
+            sound_lookup.sfx_queue.insert(0,sound_lookup.ai_destroy)
+            #pyxel.play(sound_lookup.sfx_ch,sound_lookup.fall_in_pit)
+            config.screen_pause_frames = self.screen_freeze_amount
+            self.dead_frames = self.max_dead_frames
 
         if self.invuln_frames <= 0:
             self.movement_update()
