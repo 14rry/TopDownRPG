@@ -22,7 +22,7 @@ class Doggy(ai.Ai):
 
         self.invincible = True
 
-        print('Ruff!')
+        print('ruff')
 
     def take_player_damage(self,damage_amount):
         return
@@ -83,6 +83,12 @@ class Doggy(ai.Ai):
 
             xd = self.move_dir[0]*self.speed
             yd = self.move_dir[1]*self.speed
+
+
+        if self.move_dir[0] < 0:
+            self.lr_flip = -1
+        elif self.move_dir[0] > 0:
+            self.lr_flip = 1
 
         # general moveable objects collision check (spikes, walls, pits)
         moveable_obj.MoveableObj.update(self,xdelta = xd, ydelta = yd)

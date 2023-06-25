@@ -81,7 +81,7 @@ class LevelHandler:
                 tm_pos = self.player_pos_to_tm(i,j)
                 tm_val = pyxel.tilemap(1).pget(tm_pos[0],tm_pos[1])
                 is_obj = False
-                if tm_val == tile_lookup.ball:
+                if tm_val in tile_lookup.balls:
                     self.level_objs.append(moveable_obj.MoveableObj(i,j,self,tm_val))
                     is_obj = True
                 elif tm_val in tile_lookup.ai:
@@ -164,6 +164,44 @@ class LevelHandler:
             if tile_coll == 1 and light_up:
                 pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],tile_lookup.wall_highlight)
             return tile_coll
+
+    def check_tile_collision_multilayer(self,roundX,roundY,light_up = False,obj_collision=True,obj=None):
+
+        # try:    
+        #     return self.level_collision[roundX][roundY]
+        # except (ValueError, IndexError):
+
+        # fall back to tm value .. this happens when changing level
+        tm_pos = self.player_pos_to_tm(roundX,roundY)
+        tm_vals = []
+        tm_vals.append(pyxel.tilemap(0).pget(tm_pos[0],tm_pos[1]))
+
+        # level objs
+        if obj_collision:
+            for level_obj in self.level_objs:
+                if level_obj == obj:
+                    continue # don't collide with self
+                #print(round(self.level_obj.x),roundX,round(self.level_obj.y),roundY,tm_pos)
+                if level_obj.collision_value == 1: # only care about walls right now
+                    if level_obj.attached_to == None and not level_obj.being_thrown:
+                        if round(level_obj.x) == roundX and round(level_obj.y) == roundY:
+                            tm_vals.append(level_obj.sprite_index)
+
+        #print(len(tile_lookup.collision[0]),len(tile_lookup.collision))
+
+        col_vals = []
+        for tm_val in tm_vals:
+            if tm_val[0] >= len(tile_lookup.collision[0]) or tm_val[1] >= len(tile_lookup.collision):
+                print('check_tile_collision lookup error out of bounds, tm_val:')
+                print(tm_val)
+                col_vals.append(-1)
+            else:
+                tile_coll = tile_lookup.collision[tm_val[1]][tm_val[0]]
+                if tile_coll == 1 and light_up:
+                    pyxel.tilemap(0).pset(tm_pos[0],tm_pos[1],tile_lookup.wall_highlight)
+                col_vals.append(tile_coll)
+
+        return col_vals
 
     def player_pos_to_tm(self,x,y):
         return [x + (self.level_index[0]*self.screen_size),y + (self.level_index[1]*self.screen_size)]

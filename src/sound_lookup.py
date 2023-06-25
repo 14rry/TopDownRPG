@@ -26,8 +26,8 @@ sfx_volume = 0
 
 def set_volumes():
     # flaw with this approach: sounds can only be flat levels
-    set_music_volume(3)
-    set_sfx_volume(1)
+    set_music_volume(0)
+    set_sfx_volume(5)
 
 def set_music_volume(vol):
     if vol < 0 or vol > 7:

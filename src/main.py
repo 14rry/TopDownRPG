@@ -18,6 +18,7 @@ from enum import Enum
 import config
 import sound_lookup
 import menu
+import scripted
 
 enable_bg = False
 
@@ -47,7 +48,8 @@ class App:
         pyxel.init(
             self.window_width,
             self.levelSize*self.grid_size,
-            fps = 60)
+            fps = 60,
+            quit_key=pyxel.KEY_F4)
 
         pyxel.load("resources/topdown.pyxres")
         pyxel.image(1).load(0,0,'resources/gamewindow.png')
@@ -65,6 +67,7 @@ class App:
         # self.swarm = swarm.Swarm(self.levelSize)
         self.contrail = contrail.Contrail(self.player,self.levels.camera)
         self.dialog = dialog.Dialog(self.grid_size)
+        self.scripted = scripted.Scripted(self.levels)
 
         # assign player to AI and tele ball
         for lvl_obj in self.levels.level_objs:
@@ -147,6 +150,7 @@ class App:
 
             sound_lookup.update()
             menu.update()
+            self.scripted.update()
 
 
         
@@ -159,13 +163,19 @@ class App:
         # draw map
         self.levels.draw(self.game_draw_start)
 
+        # draw level objects
+        ai_after = []
+        for val in self.levels.level_objs:
+            if isinstance(val,ai.Ai):
+                ai_after.append(val)
+            else:
+                val.draw(self.game_draw_start)
+        for val in ai_after:
+            val.draw(self.game_draw_start)
+
         # draw player        
         self.contrail.draw(self.game_draw_start)
         self.player.draw(self.game_draw_start)
-
-        # draw level objects
-        for val in self.levels.level_objs:
-            val.draw(self.game_draw_start)
         
         self.dialog.draw(self.screen_width)
 

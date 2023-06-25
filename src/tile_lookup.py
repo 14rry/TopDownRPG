@@ -11,7 +11,7 @@ collision = [
     [0,0,2,0,0,0,0,0],
     [1,1,1,1,0,0,0,0],
     [0,0,0,0,0,0,0,0],
-    [3,3,3,0,0,0,0,0],
+    [3,3,3,0,1,0,0,0],
     [3,3,3,0,0,0,0,0],
     [3,3,3,0,0,0,0,0],
     [1,1,1,1,1,1,0,0],
@@ -30,7 +30,8 @@ collision = [
 ]
 
 # special scenery object tiles
-ball = (3,4)
+ball = (3,4) 
+balls = [(3,4),(4,9)] # ball, box
 ai = [(3,6),(4,6),(5,6)]
 tele_ball = [(2,8),(3,9)]
 doggy = (4,4)
@@ -39,6 +40,8 @@ doggy = (4,4)
 wall_highlight = (2,7)
 coin = (0,8)
 transparent = (1,8)
+bridge = (3,11)
+dirt = (4,16)
 
 # ANIMATION TABLES
 
@@ -70,7 +73,8 @@ tele_ball_animation = {
 
 b_r = [
         [1,3,2,2],
-        [2,2,2,1]
+        [2,2,2,1],
+        [10,7,2,2]
     ]
 
 # extend rooms into list of all level indexes programatically
@@ -97,6 +101,6 @@ for big_room in b_r:
 #                 [[2,2],[3,2],[16*2,16]]
 #             ]
 
-# print(big_rooms)
+print(big_rooms)
 # print(big_rooms_og)
 

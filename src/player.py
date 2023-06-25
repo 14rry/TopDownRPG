@@ -7,6 +7,7 @@ import ai
 from enum import Enum
 import player_animation
 import config
+import doggy
 
 class Player(moveable_obj.MoveableObj):
     def __init__(self,x,y,levels):
@@ -17,6 +18,7 @@ class Player(moveable_obj.MoveableObj):
         
 
         self.health = 10
+        self.max_health = 10
         self.ai_damage = 1 # amount of damage ai inflicts on player collision
         self.ai_pushback = .08
         self.invuln_frames = 0
@@ -506,6 +508,9 @@ class Player(moveable_obj.MoveableObj):
         for level_obj in self.levels.level_objs:
             if level_obj.alive == True and level_obj.is_attachable:
                 if utilities.box_collision_detect(min_x,min_y,w,h,level_obj.x*8,level_obj.y*8,8,8) == True:
+                    if isinstance(level_obj.attached_to,doggy.Doggy):
+                        print('test')
+                        self.health = min(self.health+1,self.max_health)
                     level_obj.attach(self)
                     self.any_attached = True
 
